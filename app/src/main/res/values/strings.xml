@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Haven</string>
+    <string name="accessibility_service_description">Haven uses accessibility to help you interact with your phone through voice.</string>
+</resources>
