@@ -16,6 +16,10 @@ import android.widget.ScrollView
 import android.view.Gravity
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.coroutines.*
 import okhttp3.*
@@ -26,6 +30,7 @@ import org.json.JSONObject
 import java.util.Locale
 import java.util.UUID
 import android.provider.Settings
+import android.provider.ContactsContract
 import android.net.Uri
 import java.io.File
 import java.io.FileOutputStream
@@ -49,6 +54,9 @@ class MainActivity : AppCompatActivity() {
     private var isWaitingForResponse = false
     private lateinit var userId: String
     private var mediaPlayer: MediaPlayer? = null
+    private val RECORD_AUDIO_REQUEST_CODE = 101
+    private val READ_CONTACTS_REQUEST_CODE = 102
+    private var pendingCallName: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -148,13 +156,110 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startListening() {
-        if (isSpeaking || isWaitingForResponse) return
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+            != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(
+                this, arrayOf(Manifest.permission.RECORD_AUDIO), RECORD_AUDIO_REQUEST_CODE
+            )
+            return
+        }
+        if (isWaitingForResponse) return
+        if (isSpeaking) {
+            // Barge-in: stop current speech immediately and start listening
+            try { mediaPlayer?.stop() } catch (e: Exception) {}
+            mediaPlayer?.release()
+            mediaPlayer = null
+            isSpeaking = false
+        }
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
         }
         micButton.text = "Listening..."
         speechRecognizer.startListening(intent)
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int, permissions: Array<out String>, grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == RECORD_AUDIO_REQUEST_CODE) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                startListening()
+            } else {
+                addBubble("Haven needs microphone access to hear you. Please enable it in phone settings.", isUser = false)
+            }
+        } else if (requestCode == READ_CONTACTS_REQUEST_CODE) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                pendingCallName?.let { callContactByName(it) }
+            } else {
+                addBubble("Haven needs contacts access to call people by name. Please enable it in phone settings.", isUser = false)
+            }
+        }
+    }
+
+    private fun extractPhoneNumber(text: String): String? {
+        val regex = Regex("[0-9][0-9\\-\\s]{6,}[0-9]")
+        val match = regex.find(text) ?: return null
+        val digits = match.value.filter { it.isDigit() }
+        return if (digits.length in 7..15) digits else null
+    }
+
+    private fun extractContactName(lowerText: String, phoneNumberDigits: String): String {
+        var cleaned = lowerText
+        val numberRegex = Regex("[0-9][0-9\\-\\s]{6,}[0-9]")
+        cleaned = numberRegex.replace(cleaned, " ")
+        val fillerWords = listOf(
+            "save", "add", "to my contacts", "to contacts", "as a contact",
+            "this number", "number", "contact", "for", "as", "to", "my", "the", "is", "a "
+        )
+        for (filler in fillerWords) {
+            cleaned = cleaned.replace(filler, " ")
+        }
+        return cleaned.trim().split(Regex("\\s+")).filter { it.isNotBlank() }.joinToString(" ")
+    }
+
+    private fun launchSaveContact(name: String, phoneNumber: String) {
+        val displayName = name.split(" ").joinToString(" ") { word ->
+            word.replaceFirstChar { c -> c.uppercase() }
+        }
+        val intent = Intent(Intent.ACTION_INSERT, ContactsContract.Contacts.CONTENT_URI).apply {
+            putExtra(ContactsContract.Intents.Insert.NAME, displayName)
+            putExtra(ContactsContract.Intents.Insert.PHONE, phoneNumber)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        try { startActivity(intent) } catch (e: Exception) {}
+    }
+
+    private fun findContactNumber(name: String): String? {
+        val uri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI
+        val projection = arrayOf(ContactsContract.CommonDataKinds.Phone.NUMBER)
+        val selection = "${ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} LIKE ?"
+        val selectionArgs = arrayOf("%${name.trim()}%")
+        contentResolver.query(uri, projection, selection, selectionArgs, null)?.use { cursor ->
+            if (cursor.moveToFirst()) {
+                val idx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
+                return cursor.getString(idx)
+            }
+        }
+        return null
+    }
+
+    private fun callContactByName(name: String): Boolean {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS)
+            != PackageManager.PERMISSION_GRANTED) {
+            pendingCallName = name
+            ActivityCompat.requestPermissions(
+                this, arrayOf(Manifest.permission.READ_CONTACTS), READ_CONTACTS_REQUEST_CODE
+            )
+            return false
+        }
+        val number = findContactNumber(name) ?: return false
+        val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$number")).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        try { startActivity(intent) } catch (e: Exception) { return false }
+        return true
     }
 
     private fun openAppByLabel(appName: String): Boolean {
@@ -239,6 +344,52 @@ class MainActivity : AppCompatActivity() {
             micButton.isEnabled = true
             return true
         }
+        if (lower.contains("save") && (lower.contains("contact") || lower.contains("number"))) {
+            val phoneNumber = extractPhoneNumber(text)
+            val msg: String
+            if (phoneNumber != null) {
+                val name = extractContactName(lower, phoneNumber)
+                if (name.isNotBlank()) {
+                    launchSaveContact(name, phoneNumber)
+                    msg = "Opening contacts to save $name's number. Just confirm to save it."
+                } else {
+                    msg = "I caught the number but not the name. Try saying it like, save 5 5 5 1 2 3 4 5 6 7 for Mom."
+                }
+            } else {
+                msg = "I didn't catch a phone number. Try saying the full number clearly."
+            }
+            addBubble(msg, isUser = false)
+            speakWithGTTS(msg)
+            micButton.text = "Speak to Haven"
+            micButton.isEnabled = true
+            return true
+        }
+        if (lower.contains("call") || lower.contains("dial")) {
+            val triggerWords = listOf("call", "dial")
+            var name = lower
+            for (trigger in triggerWords) {
+                if (lower.contains(trigger)) {
+                    name = lower.substringAfter(trigger).trim()
+                    break
+                }
+            }
+            for (filler in listOf("my ", "a ", "the ")) {
+                if (name.startsWith(filler)) name = name.removePrefix(filler).trim()
+            }
+            if (name.isNotBlank()) {
+                val alreadyGranted = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) ==
+                    PackageManager.PERMISSION_GRANTED
+                val found = callContactByName(name)
+                val msg = if (found) "Opening the dialer for $name. Tap call to connect."
+                    else if (!alreadyGranted) "I need permission to look through your contacts. Please allow it, then ask again."
+                    else "I couldn't find $name in your contacts."
+                addBubble(msg, isUser = false)
+                speakWithGTTS(msg)
+                micButton.text = "Speak to Haven"
+                micButton.isEnabled = true
+                return true
+            }
+        }
         return false
     }
 
@@ -262,8 +413,8 @@ class MainActivity : AppCompatActivity() {
                 withContext(Dispatchers.Main) {
                     isWaitingForResponse = false
                     addBubble(responseText, isUser = false)
-                    micButton.text = "Speaking..."
-                    micButton.isEnabled = false
+                    micButton.text = "Tap to interrupt"
+                    micButton.isEnabled = true
                     statusText.text = "Haven is speaking..."
                     speakWithGTTS(responseText)
                 }
