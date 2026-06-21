@@ -31,6 +31,7 @@ import java.util.Locale
 import java.util.UUID
 import android.provider.Settings
 import android.provider.ContactsContract
+import android.content.ContentValues
 import android.net.Uri
 import java.io.File
 import java.io.FileOutputStream
@@ -57,6 +58,9 @@ class MainActivity : AppCompatActivity() {
     private val RECORD_AUDIO_REQUEST_CODE = 101
     private val READ_CONTACTS_REQUEST_CODE = 102
     private var pendingCallName: String? = null
+    private val WRITE_CONTACTS_REQUEST_CODE = 103
+    private var pendingSaveContactName: String? = null
+    private var pendingSaveContactNumber: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -195,6 +199,14 @@ class MainActivity : AppCompatActivity() {
             } else {
                 addBubble("Haven needs contacts access to call people by name. Please enable it in phone settings.", isUser = false)
             }
+        } else if (requestCode == WRITE_CONTACTS_REQUEST_CODE) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                val name = pendingSaveContactName
+                val number = pendingSaveContactNumber
+                if (name != null && number != null) silentSaveContact(name, number)
+            } else {
+                addBubble("Haven needs contacts access to save numbers for you. Please enable it in phone settings.", isUser = false)
+            }
         }
     }
 
@@ -219,16 +231,42 @@ class MainActivity : AppCompatActivity() {
         return cleaned.trim().split(Regex("\\s+")).filter { it.isNotBlank() }.joinToString(" ")
     }
 
-    private fun launchSaveContact(name: String, phoneNumber: String) {
+    private fun silentSaveContact(name: String, phoneNumber: String) {
         val displayName = name.split(" ").joinToString(" ") { word ->
             word.replaceFirstChar { c -> c.uppercase() }
         }
-        val intent = Intent(Intent.ACTION_INSERT, ContactsContract.Contacts.CONTENT_URI).apply {
-            putExtra(ContactsContract.Intents.Insert.NAME, displayName)
-            putExtra(ContactsContract.Intents.Insert.PHONE, phoneNumber)
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        try {
+            val rawContactUri = contentResolver.insert(
+                ContactsContract.RawContacts.CONTENT_URI,
+                ContentValues().apply {
+                    putNull(ContactsContract.RawContacts.ACCOUNT_TYPE)
+                    putNull(ContactsContract.RawContacts.ACCOUNT_NAME)
+                }
+            )
+            val rawContactId = rawContactUri?.lastPathSegment?.toLongOrNull() ?: return
+            contentResolver.insert(ContactsContract.Data.CONTENT_URI, ContentValues().apply {
+                put(ContactsContract.Data.RAW_CONTACT_ID, rawContactId)
+                put(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE)
+                put(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, displayName)
+            })
+            contentResolver.insert(ContactsContract.Data.CONTENT_URI, ContentValues().apply {
+                put(ContactsContract.Data.RAW_CONTACT_ID, rawContactId)
+                put(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
+                put(ContactsContract.CommonDataKinds.Phone.NUMBER, phoneNumber)
+                put(ContactsContract.CommonDataKinds.Phone.TYPE, ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE)
+            })
+            val msg = "Done. I saved $displayName's number for you."
+            addBubble(msg, isUser = false)
+            speakWithGTTS(msg)
+        } catch (e: Exception) {
+            val msg = "Something went wrong saving that number. Try again."
+            addBubble(msg, isUser = false)
+            speakWithGTTS(msg)
         }
-        try { startActivity(intent) } catch (e: Exception) {}
+        micButton.text = "Speak to Haven"
+        micButton.isEnabled = true
+        pendingSaveContactName = null
+        pendingSaveContactNumber = null
     }
 
     private fun findContactNumber(name: String): String? {
@@ -350,8 +388,18 @@ class MainActivity : AppCompatActivity() {
             if (phoneNumber != null) {
                 val name = extractContactName(lower, phoneNumber)
                 if (name.isNotBlank()) {
-                    launchSaveContact(name, phoneNumber)
-                    msg = "Opening contacts to save $name's number. Just confirm to save it."
+                    if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_CONTACTS)
+                        != PackageManager.PERMISSION_GRANTED) {
+                        pendingSaveContactName = name
+                        pendingSaveContactNumber = phoneNumber
+                        ActivityCompat.requestPermissions(
+                            this, arrayOf(Manifest.permission.WRITE_CONTACTS), WRITE_CONTACTS_REQUEST_CODE
+                        )
+                        msg = "I need permission to save contacts. Please allow it."
+                    } else {
+                        silentSaveContact(name, phoneNumber)
+                        return true
+                    }
                 } else {
                     msg = "I caught the number but not the name. Try saying it like, save 5 5 5 1 2 3 4 5 6 7 for Mom."
                 }
