@@ -1,7 +1,10 @@
 package com.dexos.haven
 
 import android.media.AudioAttributes
+import android.media.AudioManager
 import android.media.MediaPlayer
+import android.os.Handler
+import android.os.Looper
 import android.os.Bundle
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
@@ -55,6 +58,7 @@ class MainActivity : AppCompatActivity() {
     private var isWaitingForResponse = false
     private lateinit var userId: String
     private var mediaPlayer: MediaPlayer? = null
+    private var speechQueue: MutableList<String> = mutableListOf()
     private val RECORD_AUDIO_REQUEST_CODE = 101
     private val READ_CONTACTS_REQUEST_CODE = 102
     private var pendingCallName: String? = null
@@ -169,7 +173,8 @@ class MainActivity : AppCompatActivity() {
         }
         if (isWaitingForResponse) return
         if (isSpeaking) {
-            // Barge-in: stop current speech immediately and start listening
+            // Barge-in: stop current speech immediately, drop queued sentences, start listening
+            speechQueue.clear()
             try { mediaPlayer?.stop() } catch (e: Exception) {}
             mediaPlayer?.release()
             mediaPlayer = null
@@ -178,8 +183,17 @@ class MainActivity : AppCompatActivity() {
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 2000L)
+            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 2000L)
+            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 1500L)
         }
         micButton.text = "Listening..."
+        val audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
+        val originalVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+        try { audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 0, 0) } catch (e: Exception) {}
+        Handler(Looper.getMainLooper()).postDelayed({
+            try { audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, originalVolume, 0) } catch (e: Exception) {}
+        }, 500)
         speechRecognizer.startListening(intent)
     }
 
@@ -195,7 +209,7 @@ class MainActivity : AppCompatActivity() {
             }
         } else if (requestCode == READ_CONTACTS_REQUEST_CODE) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                pendingCallName?.let { callContactByName(it) }
+                pendingCallName?.let { name -> callContactByName(name) }
             } else {
                 addBubble("Haven needs contacts access to call people by name. Please enable it in phone settings.", isUser = false)
             }
@@ -269,35 +283,60 @@ class MainActivity : AppCompatActivity() {
         pendingSaveContactNumber = null
     }
 
-    private fun findContactNumber(name: String): String? {
+    private fun findMatchingContacts(name: String): List<Pair<String, String>> {
+        val results = mutableListOf<Pair<String, String>>()
         val uri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI
-        val projection = arrayOf(ContactsContract.CommonDataKinds.Phone.NUMBER)
+        val projection = arrayOf(
+            ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+            ContactsContract.CommonDataKinds.Phone.NUMBER
+        )
         val selection = "${ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} LIKE ?"
         val selectionArgs = arrayOf("%${name.trim()}%")
         contentResolver.query(uri, projection, selection, selectionArgs, null)?.use { cursor ->
-            if (cursor.moveToFirst()) {
-                val idx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
-                return cursor.getString(idx)
+            val nameIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
+            val numIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
+            val seen = mutableSetOf<String>()
+            while (cursor.moveToNext()) {
+                val cName = cursor.getString(nameIdx) ?: continue
+                val cNum = cursor.getString(numIdx) ?: continue
+                if (seen.add("$cName|$cNum")) results.add(cName to cNum)
             }
         }
-        return null
+        return results
     }
 
-    private fun callContactByName(name: String): Boolean {
+    private fun callContactByName(name: String) {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS)
             != PackageManager.PERMISSION_GRANTED) {
             pendingCallName = name
             ActivityCompat.requestPermissions(
                 this, arrayOf(Manifest.permission.READ_CONTACTS), READ_CONTACTS_REQUEST_CODE
             )
-            return false
+            val msg = "I need permission to look through your contacts. Please allow it, then ask again."
+            addBubble(msg, isUser = false)
+            speakWithGTTS(msg)
+            return
         }
-        val number = findContactNumber(name) ?: return false
-        val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$number")).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        val matches = findMatchingContacts(name)
+        val msg = when {
+            matches.isEmpty() -> "I couldn't find $name in your contacts."
+            matches.size == 1 -> {
+                val (cName, number) = matches[0]
+                val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$number")).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                try { startActivity(intent) } catch (e: Exception) {}
+                "Opening the dialer for $cName. Tap call to connect."
+            }
+            else -> {
+                val names = matches.map { it.first }.distinct()
+                "I found a few matches: ${names.joinToString(", ")}. Try saying the full name."
+            }
         }
-        try { startActivity(intent) } catch (e: Exception) { return false }
-        return true
+        addBubble(msg, isUser = false)
+        speakWithGTTS(msg)
+        micButton.text = "Speak to Haven"
+        micButton.isEnabled = true
     }
 
     private fun openAppByLabel(appName: String): Boolean {
@@ -425,16 +464,7 @@ class MainActivity : AppCompatActivity() {
                 if (name.startsWith(filler)) name = name.removePrefix(filler).trim()
             }
             if (name.isNotBlank()) {
-                val alreadyGranted = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) ==
-                    PackageManager.PERMISSION_GRANTED
-                val found = callContactByName(name)
-                val msg = if (found) "Opening the dialer for $name. Tap call to connect."
-                    else if (!alreadyGranted) "I need permission to look through your contacts. Please allow it, then ask again."
-                    else "I couldn't find $name in your contacts."
-                addBubble(msg, isUser = false)
-                speakWithGTTS(msg)
-                micButton.text = "Speak to Haven"
-                micButton.isEnabled = true
+                callContactByName(name)
                 return true
             }
         }
@@ -477,9 +507,24 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun splitIntoChunks(text: String): MutableList<String> {
+        val sentences = text.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotBlank() }
+        return if (sentences.isEmpty()) mutableListOf(text) else sentences.toMutableList()
+    }
+
     private fun speakWithGTTS(text: String) {
         isSpeaking = true
-        val body = JSONObject().put("text", text).toString()
+        speechQueue = splitIntoChunks(text)
+        playNextChunk()
+    }
+
+    private fun playNextChunk() {
+        if (!isSpeaking || speechQueue.isEmpty()) {
+            if (isSpeaking) onSpeakDone()
+            return
+        }
+        val chunk = speechQueue.removeAt(0)
+        val body = JSONObject().put("text", chunk).toString()
         val request = Request.Builder()
             .url(TTS_URL)
             .post(body.toRequestBody("application/json".toMediaType()))
@@ -489,12 +534,16 @@ class MainActivity : AppCompatActivity() {
                 val response = client.newCall(request).execute()
                 val audioBytes = response.body?.bytes()
                 if (audioBytes == null || audioBytes.size < 1000) {
-                    withContext(Dispatchers.Main) { onSpeakDone() }
+                    withContext(Dispatchers.Main) { playNextChunk() }
                     return@launch
                 }
-                val tempFile = File(cacheDir, "haven_tts.mp3")
+                val tempFile = File(cacheDir, "haven_tts_${System.currentTimeMillis()}.mp3")
                 FileOutputStream(tempFile).use { it.write(audioBytes) }
                 withContext(Dispatchers.Main) {
+                    if (!isSpeaking) {
+                        tempFile.delete()
+                        return@withContext
+                    }
                     try {
                         mediaPlayer?.release()
                         mediaPlayer = MediaPlayer().apply {
@@ -509,22 +558,23 @@ class MainActivity : AppCompatActivity() {
                             setOnCompletionListener {
                                 release()
                                 mediaPlayer = null
-                                onSpeakDone()
+                                tempFile.delete()
+                                playNextChunk()
                             }
                             setOnErrorListener { _, _, _ ->
                                 release()
                                 mediaPlayer = null
-                                onSpeakDone()
+                                playNextChunk()
                                 true
                             }
                             prepareAsync()
                         }
                     } catch (e: Exception) {
-                        onSpeakDone()
+                        playNextChunk()
                     }
                 }
             } catch (e: Exception) {
-                withContext(Dispatchers.Main) { onSpeakDone() }
+                withContext(Dispatchers.Main) { playNextChunk() }
             }
         }
     }
