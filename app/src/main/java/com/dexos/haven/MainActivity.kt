@@ -284,14 +284,15 @@ class MainActivity : AppCompatActivity() {
 
     private fun findMatchingContacts(name: String): List<Pair<String, String>> {
         val results = mutableListOf<Pair<String, String>>()
-        val uri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI
+        val filterUri = Uri.withAppendedPath(
+            ContactsContract.CommonDataKinds.Phone.CONTENT_FILTER_URI,
+            Uri.encode(name.trim())
+        )
         val projection = arrayOf(
             ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
             ContactsContract.CommonDataKinds.Phone.NUMBER
         )
-        val selection = "${ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} LIKE ?"
-        val selectionArgs = arrayOf("%${name.trim()}%")
-        contentResolver.query(uri, projection, selection, selectionArgs, null)?.use { cursor ->
+        contentResolver.query(filterUri, projection, null, null, null)?.use { cursor ->
             val nameIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
             val numIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
             val seen = mutableSetOf<String>()
