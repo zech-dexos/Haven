@@ -427,25 +427,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         if (conversationMode && pendingWorkflow != null) {
-            val handled = continueWorkflow(text, lower)
-                // Mid-workflow: re-prompt instead of falling through to cloud
-                val reprompt = when (pendingWorkflow) {
-                    "CALL_WHO" -> "Who would you like to call?"
-                    "CALL_CLARIFY" -> "Which one did you want to call?"
-                    "CALL_NOT_FOUND" -> "Do you want to try a different spelling, or say the number?"
-                    "CALL_NUMBER" -> "What is their phone number?"
-                    "SAVE_NAME" -> "What name should I save this contact under?"
-                    "SAVE_NUMBER" -> "What is the phone number?"
-                    "SAVE_CONFIRM" -> "Should I save it? Just say yes or no."
-                    "SMS_WHO" -> "Who would you like to text?"
-                    "SMS_MSG" -> "What would you like to say?"
-                    "SMS_CONFIRM" -> "Should I send it? Say yes or no."
-                    "ALARM" -> "What time should I set the alarm for?"
-                    else -> null
-                }
-                if (reprompt != null) say(reprompt)
-            }
-            return true
+            return continueWorkflow(text, lower)
         }
 
         if (lower.contains("call") || lower.contains("dial")) {
@@ -734,7 +716,7 @@ class MainActivity : AppCompatActivity() {
                 return true
             }
             "SMS_CONFIRM" -> {
-                if (lower.contains("yes") || lower.contains("yeah") || lower.contains("yep") || lower.contains("absolutely") || lower.contains("sure") || lower.contains("do it") || lower.contains("send it") || lower.contains("go ahead") || lower.contains("correct") || lower.contains("right") || lower.contains("send")) {
+                if (lower.contains("yes") || lower.contains("yeah") || lower.contains("yep") || lower.contains("absolutely") || lower.contains("sure") || lower.contains("go ahead") || lower.contains("send it") || lower.contains("send")) {
                     val name = workflowContactName ?: ""
                     val message = workflowSmsMessage ?: ""
                     val matches = findMatchingContacts(name)
