@@ -427,7 +427,25 @@ class MainActivity : AppCompatActivity() {
         }
 
         if (conversationMode && pendingWorkflow != null) {
-            return continueWorkflow(text, lower)
+            val handled = continueWorkflow(text, lower)
+            if (!handled) {
+                val reprompt = when (pendingWorkflow) {
+                    "CALL_WHO" -> "Who would you like to call?"
+                    "CALL_CLARIFY" -> "Which one did you want to call?"
+                    "CALL_NOT_FOUND" -> "Do you want to try a different spelling, or say their number?"
+                    "CALL_NUMBER" -> "What is their phone number?"
+                    "SAVE_NAME" -> "What name should I save this contact under?"
+                    "SAVE_NUMBER" -> "What is the phone number?"
+                    "SAVE_CONFIRM" -> "Should I save it? Just say yes or no."
+                    "SMS_WHO" -> "Who would you like to text?"
+                    "SMS_MSG" -> "What would you like to say?"
+                    "SMS_CONFIRM" -> "Should I send it? Say yes or no."
+                    "ALARM" -> "What time should I set the alarm for?"
+                    else -> null
+                }
+                if (reprompt != null) say(reprompt)
+            }
+            return true
         }
 
         if (lower.contains("call") || lower.contains("dial")) {
@@ -443,6 +461,15 @@ class MainActivity : AppCompatActivity() {
                 if (name.startsWith(filler)) name = name.removePrefix(filler).trim()
             }
             if (name.isNotBlank()) {
+                val rawNumber = extractPhoneNumber(name)
+                if (rawNumber != null) {
+                    say("Dialing $rawNumber now.")
+                    val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$rawNumber")).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    try { startActivity(intent) } catch (e: Exception) {}
+                    return true
+                }
                 val matches = findMatchingContacts(name)
                 when {
                     matches.size == 1 -> {
