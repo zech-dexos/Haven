@@ -719,18 +719,30 @@ class MainActivity : AppCompatActivity() {
                 if (lower.contains("yes") || lower.contains("yeah") || lower.contains("yep") || lower.contains("absolutely") || lower.contains("sure") || lower.contains("go ahead") || lower.contains("send it") || lower.contains("send")) {
                     val name = workflowContactName ?: ""
                     val message = workflowSmsMessage ?: ""
-                    val matches = findMatchingContacts(name)
+                    // Check if the "name" is actually a raw phone number
+                    val rawNumber = extractPhoneNumber(name)
                     endWorkflow()
-                    if (matches.isNotEmpty()) {
-                        val number = matches[0].second
-                        val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:$number")).apply {
+                    if (rawNumber != null) {
+                        // User gave a number directly — use it without contacts lookup
+                        val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:$rawNumber")).apply {
                             putExtra("sms_body", message)
                             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         }
                         try { startActivity(intent) } catch (e: Exception) {}
-                        say("Opening messages for $name. Tap send when ready.")
+                        say("Opening messages. Tap send when ready.")
                     } else {
-                        say("I couldn't find $name in your contacts.")
+                        val matches = findMatchingContacts(name)
+                        if (matches.isNotEmpty()) {
+                            val number = matches[0].second
+                            val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:$number")).apply {
+                                putExtra("sms_body", message)
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            try { startActivity(intent) } catch (e: Exception) {}
+                            say("Opening messages for $name. Tap send when ready.")
+                        } else {
+                            say("I couldn't find $name in your contacts.")
+                        }
                     }
                 } else {
                     endWorkflow()
