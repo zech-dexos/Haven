@@ -232,17 +232,27 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun extractContactName(lowerText: String, phoneNumberDigits: String): String {
-        var cleaned = lowerText
         val numberRegex = Regex("[0-9][0-9\\-\\s]{6,}[0-9]")
-        cleaned = numberRegex.replace(cleaned, " ")
-        val fillerWords = listOf(
-            "save", "add", "to my contacts", "to contacts", "as a contact",
-            "this number", "number", "contact", "for", "as", "to", "my", "the", "is", "a "
-        )
-        for (filler in fillerWords) {
-            cleaned = cleaned.replace(filler, " ")
+        val withoutNumber = numberRegex.replace(lowerText, " ").trim()
+        // Strategy 1: grab what comes after "for" — "save 555 for Mom" -> "Mom"
+        val forMatch = Regex("\\bfor\\s+(.+)$").find(withoutNumber)
+        if (forMatch != null) {
+            val candidate = forMatch.groupValues[1]
+                .replace(Regex("\\b(to|my|the|contacts|contact|number|phone)\\b"), " ")
+                .replace(Regex("'s\\b"), "")
+                .trim()
+                .split(Regex("\\s+")).filter { it.isNotBlank() }.joinToString(" ")
+            if (candidate.isNotBlank()) return candidate.replaceFirstChar { it.uppercase() }
         }
-        return cleaned.trim().split(Regex("\\s+")).filter { it.isNotBlank() }.joinToString(" ")
+        // Strategy 2: grab what comes after possessive — "Sarah's number" -> "Sarah"
+        val possessive = Regex("([a-z]+)'s\\s+(number|phone|contact)").find(withoutNumber)
+        if (possessive != null) return possessive.groupValues[1].replaceFirstChar { it.uppercase() }
+        // Strategy 3: last word(s) before/after stripping all filler
+        val stripped = withoutNumber
+            .replace(Regex("\\b(save|add|store|keep|put|this|a|the|my|to|for|as|number|phone|contact|contacts|please|can|you|hey|haven)\\b"), " ")
+            .trim()
+            .split(Regex("\\s+")).filter { it.isNotBlank() }
+        return stripped.joinToString(" ").replaceFirstChar { it.uppercase() }
     }
 
     private fun silentSaveContact(name: String, phoneNumber: String) {
