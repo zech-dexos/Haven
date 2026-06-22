@@ -418,8 +418,6 @@ class MainActivity : AppCompatActivity() {
                 if (name.isNotBlank()) {
                     silentSaveContact(name, phoneNumber)
                     return true
-                    if (false) {
-                        msg = ""
                 } else {
                     msg = "I caught the number but not the name. Try saying it like, save 5 5 5 1 2 3 4 5 6 7 for Mom."
                 }
