@@ -712,7 +712,7 @@ class MainActivity : AppCompatActivity() {
             "SMS_MSG" -> {
                 workflowSmsMessage = text
                 pendingWorkflow = "SMS_CONFIRM"
-                say("I'll send to ${workflowContactName}: "$text". Should I send it?")
+                say("I'll send to ${workflowContactName}: \"${workflowSmsMessage}\". Should I send it?")
                 return true
             }
             "SMS_CONFIRM" -> {
@@ -741,7 +741,7 @@ class MainActivity : AppCompatActivity() {
             "ALARM" -> {
                 val intent = Intent(android.provider.AlarmClock.ACTION_SET_ALARM).apply {
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    val timeRegex = Regex("(\d{1,2})(?::(\d{2}))?\s*(am|pm)?", RegexOption.IGNORE_CASE)
+                    val timeRegex = Regex("(\\d{1,2})(?::(\\d{2}))?\\s*(am|pm)?", RegexOption.IGNORE_CASE)
                     val match = timeRegex.find(lower)
                     if (match != null) {
                         var hour = match.groupValues[1].toIntOrNull() ?: 0
