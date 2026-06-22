@@ -316,6 +316,7 @@ class MainActivity : AppCompatActivity() {
             speakWithGTTS(msg)
             return
         }
+        addBubble("[DEBUG] searching for: '" + name + "'", isUser = false)
         val matches = findMatchingContacts(name)
         val msg = when {
             matches.isEmpty() -> "I couldn't find $name in your contacts."
