@@ -318,7 +318,20 @@ class MainActivity : AppCompatActivity() {
             return
         }
         addBubble("[DEBUG] searching for: '" + name + "'", isUser = false)
-        val matches = findMatchingContacts(name)
+        // Try the spoken name first, then common phonetic variants if no match
+        var matches = findMatchingContacts(name)
+        if (matches.isEmpty()) {
+            val variants = mutableListOf<String>()
+            val n = name.lowercase()
+            if (n.endsWith("ck")) variants.add(name.dropLast(2) + "ch")
+            if (n.endsWith("ch")) variants.add(name.dropLast(2) + "ck")
+            if (n.endsWith("k")) variants.add(name.dropLast(1) + "ch")
+            if (n.endsWith("c")) variants.add(name.dropLast(1) + "k")
+            for (v in variants) {
+                matches = findMatchingContacts(v)
+                if (matches.isNotEmpty()) break
+            }
+        }
         val msg = when {
             matches.isEmpty() -> "I couldn't find $name in your contacts."
             matches.size == 1 -> {
