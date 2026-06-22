@@ -249,31 +249,20 @@ class MainActivity : AppCompatActivity() {
         val displayName = name.split(" ").joinToString(" ") { word ->
             word.replaceFirstChar { c -> c.uppercase() }
         }
+        // Use ACTION_INSERT intent — no WRITE_CONTACTS permission needed,
+        // user sees the pre-filled contact and confirms with one tap
+        val intent = Intent(Intent.ACTION_INSERT, ContactsContract.Contacts.CONTENT_URI).apply {
+            putExtra(ContactsContract.Intents.Insert.NAME, displayName)
+            putExtra(ContactsContract.Intents.Insert.PHONE, phoneNumber)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
         try {
-            val rawContactUri = contentResolver.insert(
-                ContactsContract.RawContacts.CONTENT_URI,
-                ContentValues().apply {
-                    putNull(ContactsContract.RawContacts.ACCOUNT_TYPE)
-                    putNull(ContactsContract.RawContacts.ACCOUNT_NAME)
-                }
-            )
-            val rawContactId = rawContactUri?.lastPathSegment?.toLongOrNull() ?: return
-            contentResolver.insert(ContactsContract.Data.CONTENT_URI, ContentValues().apply {
-                put(ContactsContract.Data.RAW_CONTACT_ID, rawContactId)
-                put(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE)
-                put(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, displayName)
-            })
-            contentResolver.insert(ContactsContract.Data.CONTENT_URI, ContentValues().apply {
-                put(ContactsContract.Data.RAW_CONTACT_ID, rawContactId)
-                put(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
-                put(ContactsContract.CommonDataKinds.Phone.NUMBER, phoneNumber)
-                put(ContactsContract.CommonDataKinds.Phone.TYPE, ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE)
-            })
-            val msg = "Done. I saved $displayName's number for you."
+            startActivity(intent)
+            val msg = "Opening contacts for $displayName — just tap Save to confirm."
             addBubble(msg, isUser = false)
             speakWithGTTS(msg)
         } catch (e: Exception) {
-            val msg = "Something went wrong saving that number. Try again."
+            val msg = "I couldn't open the contacts app. Try saving it manually."
             addBubble(msg, isUser = false)
             speakWithGTTS(msg)
         }
@@ -427,18 +416,10 @@ class MainActivity : AppCompatActivity() {
             if (phoneNumber != null) {
                 val name = extractContactName(lower, phoneNumber)
                 if (name.isNotBlank()) {
-                    if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_CONTACTS)
-                        != PackageManager.PERMISSION_GRANTED) {
-                        pendingSaveContactName = name
-                        pendingSaveContactNumber = phoneNumber
-                        ActivityCompat.requestPermissions(
-                            this, arrayOf(Manifest.permission.WRITE_CONTACTS), WRITE_CONTACTS_REQUEST_CODE
-                        )
-                        msg = "I need permission to save contacts. Please allow it."
-                    } else {
-                        silentSaveContact(name, phoneNumber)
-                        return true
-                    }
+                    silentSaveContact(name, phoneNumber)
+                    return true
+                    if (false) {
+                        msg = ""
                 } else {
                     msg = "I caught the number but not the name. Try saying it like, save 5 5 5 1 2 3 4 5 6 7 for Mom."
                 }
