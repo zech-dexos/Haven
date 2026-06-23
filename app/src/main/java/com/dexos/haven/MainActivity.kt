@@ -100,8 +100,15 @@ class MainActivity : AppCompatActivity() {
             }
         }
         memoryBar.text = "Memory active"
-        addBubble("Haven is ready. Tap the button and speak.", isUser = false)
         statusText.text = "DexOS · ReasonFlow active · memory synced"
+        val savedName = prefs.getString("user_name", null)
+        if (savedName != null) {
+            addBubble("Welcome back, $savedName. I'm here whenever you need me.", isUser = false)
+        } else {
+            addBubble("Hello! I'm Haven, your personal companion. I'm here to help you anytime. What's your name?", isUser = false)
+            pendingWorkflow = "ONBOARD_NAME"
+            conversationMode = true
+        }
     }
 
     private fun addBubble(text: String, isUser: Boolean) {
@@ -774,6 +781,31 @@ class MainActivity : AppCompatActivity() {
                 } else {
                     endWorkflow()
                     say("Okay, I won't send it.")
+                }
+                return true
+            }
+            "ONBOARD_NAME" -> {
+                val name = text.trim().split(" ").first().replaceFirstChar { it.uppercase() }
+                if (name.isNotBlank()) {
+                    prefs.edit().putString("user_name", name).apply()
+                    endWorkflow()
+                    say("It's so nice to meet you, $name. I'm here to help you anytime — just tap the button and talk to me.")
+                    // Save name to backend memory
+                    CoroutineScope(Dispatchers.IO).launch {
+                        try {
+                            val body = org.json.JSONObject()
+                                .put("user_id", userId)
+                                .put("name", name)
+                                .toString()
+                            val request = okhttp3.Request.Builder()
+                                .url("https://dex-backend-production-2bbe.up.railway.app/haven_profile")
+                                .post(body.toRequestBody("application/json".toMediaType()))
+                                .build()
+                            client.newCall(request).execute()
+                        } catch (e: Exception) {}
+                    }
+                } else {
+                    say("I didn't catch that — what's your name?")
                 }
                 return true
             }
