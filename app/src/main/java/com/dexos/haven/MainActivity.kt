@@ -201,11 +201,14 @@ class MainActivity : AppCompatActivity() {
         }
         micButton.text = "Listening..."
         val audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
-        val originalVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-        try { audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 0, 0) } catch (e: Exception) {}
+        val streams = listOf(AudioManager.STREAM_MUSIC, AudioManager.STREAM_NOTIFICATION, AudioManager.STREAM_RING)
+        val originalVolumes = streams.map { audioManager.getStreamVolume(it) }
+        streams.forEach { try { audioManager.setStreamVolume(it, 0, 0) } catch (e: Exception) {} }
         Handler(Looper.getMainLooper()).postDelayed({
-            try { audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, originalVolume, 0) } catch (e: Exception) {}
-        }, 500)
+            streams.forEachIndexed { i, stream ->
+                try { audioManager.setStreamVolume(stream, originalVolumes[i], 0) } catch (e: Exception) {}
+            }
+        }, 600)
         speechRecognizer.startListening(intent)
     }
 
