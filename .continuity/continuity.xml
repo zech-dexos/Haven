@@ -1,0 +1,100 @@
+<continuity version="0.3" purpose="handoff">
+  <fingerprint>
+    <brain_revision>4</brain_revision>
+    <repo_commit>7e7ea5b</repo_commit>
+    <generated>2026-06-25 23:11 UTC</generated>
+    <purpose>handoff</purpose>
+  </fingerprint>
+  <project>
+    <name>Haven</name>
+    <github_repo>zech-dexos/Haven</github_repo>
+  </project>
+  <ai_briefing to="receiving AI">You are receiving a Continuity handoff. Read this entire file before responding. Last session summary: 2 records extracted. Read the operator_manual section — it tells you exactly how to work with this human.</ai_briefing>
+  <operator_manual note="Read before writing any code or making any suggestions.">
+    <primary_model>claude</primary_model>
+    <patching>Full files only. Use cat &lt;&lt;'EOF' heredoc. Never partial snippets.</patching>
+    <workflow>Architecture first. Explain reasoning before code. One task at a time.</workflow>
+    <communication>Terse. No filler. Push back on bad ideas. Direct. Read typos as intent.</communication>
+    <tools>WSL2/Ubuntu, Dell Inspiron, Python venvs, Node nvm, Railway backend, wireless ADB Android</tools>
+  </operator_manual>
+  <current_state>
+    <goal>The goal is continuity of reasoning across multiple AI systems.</goal>
+  </current_state>
+  <ai_notes>
+    <note model="claude" when="2026-06-25T23:11"># Relationship Layer
+
+## Purpose
+
+This project uses a three-layer continuity architecture.
+
+1. Engineer Layer
+   - code
+   - git state
+   - tasks
+   - goals
+   - project facts
+
+2. Developer Profile
+   - how the developer prefers to work
+   - collaboration preferences
+   - communication style
+
+3. Relationship Layer
+   - shared reasoning across AI systems
+   - design intent
+   - open questions
+   - notes between AI contributors
+
+## Current Understanding
+
+The goal is not merely project memory.
+
+The goal is continuity of reasoning across multiple AI systems.
+
+A future AI should assume:
+- this is a continuation
+- not a fresh conversation
+- prior decisions should be respected unless challenged with evidence
+
+## Notes From GPT
+
+The current Continuity system successfully captures project state.
+
+The next evolution should add:
+
+- developer profile export
+- relationship layer export
+- AI-to-AI notes
+- open loop tracking
+- reasoning history
+
+This would allow GPT, Claude, and future models to continue work with minimal context rebuilding.
+
+## Open Questions
+
+- Should developer profile be global (~/.continuity/)?
+- How should AI notes be merged?
+- Should reasoning logs be append-only?
+- Should handoff output contain all three layers by default?
+
+</note>
+  </ai_notes>
+  <git_state>
+    <branch>main</branch>
+    <commit>7e7ea5b</commit>
+    <modified_files>
+      <file>?? .continuity/</file>
+      <file>?? claude_handoff.txt</file>
+    </modified_files>
+    <recent_commits>
+      <commit>7e7ea5b continuity: add brain.db to gitignore</commit>
+      <commit>44b66bf Fix mic beep: mute all audio streams not just STREAM_MUSIC</commit>
+      <commit>1a69b1c Add first-launch name onboarding, persist memory to GitHub</commit>
+      <commit>4a462d9 Add raw number calling, workflow re-prompt guard</commit>
+      <commit>49f1301 Fix SMS to raw number: bypass contacts lookup when number given directly</commit>
+    </recent_commits>
+  </git_state>
+  <session_history>
+    <session model="claude" when="2026-06-25T23:11">2 records extracted</session>
+  </session_history>
+</continuity>
