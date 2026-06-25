@@ -13,3 +13,6 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Continuity — keep xml, ignore db
+.continuity/brain.db
