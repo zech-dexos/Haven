@@ -70,6 +70,9 @@ class MainActivity : AppCompatActivity() {
     private var workflowContactName: String? = null
     private var workflowContactNumber: String? = null
     private var workflowSmsMessage: String? = null
+    private lateinit var audioCaptureManager: AudioCaptureManager
+    private lateinit var speakerIdentifier: SpeakerIdentifier
+    private var currentVoiceContext: VoiceContext? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -82,6 +85,10 @@ class MainActivity : AppCompatActivity() {
         chatContainer = findViewById(R.id.chatContainer)
         scrollView = findViewById(R.id.scrollView)
         prefs = getSharedPreferences("haven_prefs", MODE_PRIVATE)
+        audioCaptureManager = AudioCaptureManager(this)
+        speakerIdentifier = SpeakerIdentifier(this)
+        audioCaptureManager = AudioCaptureManager(this)
+        speakerIdentifier = SpeakerIdentifier(this)
         userId = prefs.getString("user_id", null) ?: run {
             val newId = UUID.randomUUID().toString()
             prefs.edit().putString("user_id", newId).apply()
@@ -157,8 +164,20 @@ class MainActivity : AppCompatActivity() {
                 addBubble(text, isUser = true)
                 micButton.text = "Thinking..."
                 micButton.isEnabled = false
-                val handled = handleLocalCommand(text)
-                if (!handled) sendToHaven(text)
+                val pcm = audioCaptureManager.stopAndGetPcm()
+                CoroutineScope(Dispatchers.IO).launch {
+                    val identity = speakerIdentifier.identify(pcm)
+                    currentVoiceContext = speakerIdentifier.buildContext(pcm, identity)
+                    if (identity is IdentityResult.NoProfiles) {
+                        speakerIdentifier.enroll(userId, prefs.getString("user_name", "Friend") ?: "Friend", pcm)
+                    } else if (identity is IdentityResult.Known) {
+                        speakerIdentifier.enroll(identity.profile.userId, identity.profile.displayName, pcm)
+                    }
+                    withContext(Dispatchers.Main) {
+                        val handled = handleLocalCommand(text)
+                        if (!handled) sendToHaven(text)
+                    }
+                }
             }
             override fun onEndOfSpeech() {}
             override fun onError(error: Int) {
