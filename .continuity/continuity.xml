@@ -1,7 +1,7 @@
 <continuity version="0.3" purpose="handoff">
   <fingerprint>
     <brain_revision>6</brain_revision>
-    <repo_commit>2433018</repo_commit>
+    <repo_commit>eea9886</repo_commit>
     <generated>2026-06-26 06:37 UTC</generated>
     <purpose>handoff</purpose>
   </fingerprint>
@@ -82,17 +82,17 @@ This would allow GPT, Claude, and future models to continue work with minimal co
   </ai_notes>
   <git_state>
     <branch>main</branch>
-    <commit>2433018</commit>
+    <commit>eea9886</commit>
     <modified_files>
       <file>?? .continuity/brain.db-shm</file>
       <file>?? .continuity/brain.db-wal</file>
     </modified_files>
     <recent_commits>
+      <commit>eea9886 continuity: update context package</commit>
       <commit>2433018 feat: voice biometrics - speaker ID, voice analytics, VoiceContext routing</commit>
       <commit>a4ca57f continuity: update context package</commit>
       <commit>cb4b92c continuity: add GPT relationship layer notes</commit>
       <commit>aead510 continuity: update context package</commit>
-      <commit>7e7ea5b continuity: add brain.db to gitignore</commit>
     </recent_commits>
   </git_state>
   <session_history>
