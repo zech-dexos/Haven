@@ -1,15 +1,15 @@
 <continuity version="0.3" purpose="handoff">
   <fingerprint>
-    <brain_revision>4</brain_revision>
-    <repo_commit>cb4b92c</repo_commit>
-    <generated>2026-06-26 00:11 UTC</generated>
+    <brain_revision>6</brain_revision>
+    <repo_commit>2433018</repo_commit>
+    <generated>2026-06-26 06:37 UTC</generated>
     <purpose>handoff</purpose>
   </fingerprint>
   <project>
     <name>Haven</name>
     <github_repo>zech-dexos/Haven</github_repo>
   </project>
-  <ai_briefing to="receiving AI">You are receiving a Continuity handoff. Read this entire file before responding. Last session summary: 2 records extracted. Read the operator_manual section — it tells you exactly how to work with this human.</ai_briefing>
+  <ai_briefing to="receiving AI">You are receiving a Continuity handoff. Read this entire file before responding. Last session summary: 0 records extracted. Read the operator_manual section — it tells you exactly how to work with this human.</ai_briefing>
   <operator_manual note="Read before writing any code or making any suggestions.">
     <primary_model>claude</primary_model>
     <patching>Full files only. Use cat &lt;&lt;'EOF' heredoc. Never partial snippets.</patching>
@@ -21,6 +21,7 @@
     <goal>The goal is continuity of reasoning across multiple AI systems.</goal>
   </current_state>
   <ai_notes>
+    <note model="claude" when="2026-06-26T06:37">git add -A &amp;&amp; git commit -m "feat: voice biometrics - speaker ID, voice analytics, VoiceContext routing" &amp;&amp; git push</note>
     <note model="claude" when="2026-06-25T23:11"># Relationship Layer
 
 ## Purpose
@@ -81,20 +82,20 @@ This would allow GPT, Claude, and future models to continue work with minimal co
   </ai_notes>
   <git_state>
     <branch>main</branch>
-    <commit>cb4b92c</commit>
+    <commit>2433018</commit>
     <modified_files>
       <file>?? .continuity/brain.db-shm</file>
       <file>?? .continuity/brain.db-wal</file>
     </modified_files>
     <recent_commits>
+      <commit>2433018 feat: voice biometrics - speaker ID, voice analytics, VoiceContext routing</commit>
+      <commit>a4ca57f continuity: update context package</commit>
       <commit>cb4b92c continuity: add GPT relationship layer notes</commit>
       <commit>aead510 continuity: update context package</commit>
       <commit>7e7ea5b continuity: add brain.db to gitignore</commit>
-      <commit>44b66bf Fix mic beep: mute all audio streams not just STREAM_MUSIC</commit>
-      <commit>1a69b1c Add first-launch name onboarding, persist memory to GitHub</commit>
     </recent_commits>
   </git_state>
   <session_history>
-    <session model="claude" when="2026-06-25T23:11">2 records extracted</session>
+    <session model="claude" when="2026-06-26T06:37">0 records extracted</session>
   </session_history>
 </continuity>
