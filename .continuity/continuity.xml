@@ -1,8 +1,8 @@
 <continuity version="0.3" purpose="handoff">
   <fingerprint>
     <brain_revision>4</brain_revision>
-    <repo_commit>7e7ea5b</repo_commit>
-    <generated>2026-06-25 23:11 UTC</generated>
+    <repo_commit>cb4b92c</repo_commit>
+    <generated>2026-06-26 00:11 UTC</generated>
     <purpose>handoff</purpose>
   </fingerprint>
   <project>
@@ -81,17 +81,17 @@ This would allow GPT, Claude, and future models to continue work with minimal co
   </ai_notes>
   <git_state>
     <branch>main</branch>
-    <commit>7e7ea5b</commit>
+    <commit>cb4b92c</commit>
     <modified_files>
-      <file>?? .continuity/</file>
-      <file>?? claude_handoff.txt</file>
+      <file>?? .continuity/brain.db-shm</file>
+      <file>?? .continuity/brain.db-wal</file>
     </modified_files>
     <recent_commits>
+      <commit>cb4b92c continuity: add GPT relationship layer notes</commit>
+      <commit>aead510 continuity: update context package</commit>
       <commit>7e7ea5b continuity: add brain.db to gitignore</commit>
       <commit>44b66bf Fix mic beep: mute all audio streams not just STREAM_MUSIC</commit>
       <commit>1a69b1c Add first-launch name onboarding, persist memory to GitHub</commit>
-      <commit>4a462d9 Add raw number calling, workflow re-prompt guard</commit>
-      <commit>49f1301 Fix SMS to raw number: bypass contacts lookup when number given directly</commit>
     </recent_commits>
   </git_state>
   <session_history>
