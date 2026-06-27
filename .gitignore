@@ -16,3 +16,5 @@ local.properties
 
 # Continuity — keep xml, ignore db
 .continuity/brain.db
+.continuity/brain.db-shm
+.continuity/brain.db-wal
