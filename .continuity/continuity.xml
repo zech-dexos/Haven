@@ -1,15 +1,15 @@
 <continuity version="0.3" purpose="handoff">
   <fingerprint>
-    <brain_revision>23</brain_revision>
-    <repo_commit>2e9c124</repo_commit>
-    <generated>2026-06-27 09:02 UTC</generated>
+    <brain_revision>31</brain_revision>
+    <repo_commit>348995f</repo_commit>
+    <generated>2026-06-27 12:40 UTC</generated>
     <purpose>handoff</purpose>
   </fingerprint>
   <project>
     <name>Haven</name>
     <github_repo>zech-dexos/Haven</github_repo>
   </project>
-  <ai_briefing to="receiving AI">You are receiving a Continuity handoff. Read this entire file before responding. Last session summary: 0 records extracted. Current task: Send voice_context from Android to /haven_api POST body. Why: VoiceContext is parsed on backend now but Android not sending it yet. There are 2 open question(s) that need resolution. Read the operator_manual section — it tells you exactly how to work with this human.</ai_briefing>
+  <ai_briefing to="receiving AI">You are receiving a Continuity handoff. Read this entire file before responding. Last session summary: 0 records extracted. Current task: Research Android accessibility APIs — text size, keyboard size, display settings. Why: Haven needs to change system settings via voice command. There are 2 open question(s) that need resolution. Read the operator_manual section — it tells you exactly how to work with this human.</ai_briefing>
   <operator_manual note="Read before writing any code or making any suggestions.">
     <primary_model>claude</primary_model>
     <patching>Full files only. Use cat &lt;&lt;'EOF' heredoc. Never partial snippets.</patching>
@@ -24,10 +24,10 @@
     <startup_cmd>uvicorn api:app --reload</startup_cmd>
   </operator_manual>
   <current_state>
-    <goal>Build Haven — voice-first AI companion, ship XPRIZE by Aug 17 2026</goal>
+    <goal>Haven accessibility — keyboard size, text size, phone controls via voice</goal>
     <task>
-      <what>Send voice_context from Android to /haven_api POST body</what>
-      <why>VoiceContext is parsed on backend now but Android not sending it yet</why>
+      <what>Research Android accessibility APIs — text size, keyboard size, display settings</what>
+      <why>Haven needs to change system settings via voice command</why>
     </task>
   </current_state>
   <ai_notes>
@@ -52,19 +52,27 @@ open: does Cloud Run need VPC connector to reach Railway DB?
 switching_because: end of session
 summary: built and deployed full voice biometrics layer — speaker ID + health/emotional signal analytics. APK installed on device. commit 2433018. XPRIZE requirements B and D substantially complete, A and C remain open.</note>
   </ai_notes>
+  <decisions>
+    <decision why="Accessibility as core feature not add-on. Elder should never need to touch settings.">Haven controls phone — text size, keyboard size, display, calls, SMS via voice command.</decision>
+    <decision why="Silent distress is a real eldercare problem. Voice analytics already built for this.">Haven detects distress in voice even if user never says help — routes to emergency.</decision>
+    <decision why="Personalization is what makes Haven irreplaceable vs generic AI">Haven learns elder speech patterns and preferences over time via voice profile.</decision>
+    <decision why="Family tier monetization + safety net for elders living alone">Family dashboard — family sees activity, mood signals, alerts in real time.</decision>
+    <decision why="Elderly users may not ask for help even when they need it">Haven is proactive — checks in on user without being asked. Detects silence gaps.</decision>
+    <decision>Haven must control phone — not just respond. It is an agent not a chatbot.</decision>
+  </decisions>
   <open_questions>
     <question>VPC connector resolved — Railway uses public hostname, no connector needed</question>
     <question>does Cloud Run need VPC connector to reach Railway DB?</question>
   </open_questions>
   <git_state>
     <branch>main</branch>
-    <commit>2e9c124</commit>
+    <commit>348995f</commit>
     <recent_commits>
+      <commit>348995f continuity: update context package</commit>
       <commit>2e9c124 continuity: ignore WAL files</commit>
       <commit>80c1455 continuity: update context package</commit>
       <commit>fdfa355 continuity: update context package</commit>
       <commit>ceb025d continuity: update context package</commit>
-      <commit>8542b8a continuity: update context package</commit>
     </recent_commits>
   </git_state>
   <session_history>
