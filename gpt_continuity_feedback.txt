@@ -1,0 +1,22 @@
+# GPT Feedback on Continuity — Session 2026-06-27
+
+## What's working
+- Project state, engineering state, human preferences, reasoning continuity all captured
+
+## Proposed fifth layer: Architecture
+- major design decisions
+- invariants
+- intentional technical debt
+- things that should never be refactored away
+- rejected designs and why
+
+## Proposed structured decision records
+<decision>
+    <title>VoiceContext belongs on backend</title>
+    <reason>Android should only measure. Backend should interpret.</reason>
+    <confidence>0.93</confidence>
+</decision>
+
+## Key quote
+"I would not feel like I was starting from zero.
+I'd feel like I had just sat down after another engineer ended their shift."
