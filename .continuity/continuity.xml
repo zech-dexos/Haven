@@ -1,7 +1,7 @@
 <continuity version="0.3" purpose="handoff">
   <fingerprint>
     <brain_revision>21</brain_revision>
-    <repo_commit>ceb025d</repo_commit>
+    <repo_commit>fdfa355</repo_commit>
     <generated>2026-06-27 09:01 UTC</generated>
     <purpose>handoff</purpose>
   </fingerprint>
@@ -56,17 +56,17 @@ summary: built and deployed full voice biometrics layer — speaker ID + health/
   </open_questions>
   <git_state>
     <branch>main</branch>
-    <commit>ceb025d</commit>
+    <commit>fdfa355</commit>
     <modified_files>
       <file>?? .continuity/brain.db-shm</file>
       <file>?? .continuity/brain.db-wal</file>
     </modified_files>
     <recent_commits>
+      <commit>fdfa355 continuity: update context package</commit>
       <commit>ceb025d continuity: update context package</commit>
       <commit>8542b8a continuity: update context package</commit>
       <commit>92291c1 continuity: GPT feedback — architecture layer + structured decisions</commit>
       <commit>604bfc9 continuity: update context package</commit>
-      <commit>55f1f97 continuity: update context package</commit>
     </recent_commits>
   </git_state>
   <session_history>
