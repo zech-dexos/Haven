@@ -1,15 +1,15 @@
 <continuity version="0.3" purpose="handoff">
   <fingerprint>
-    <brain_revision>6</brain_revision>
-    <repo_commit>eea9886</repo_commit>
-    <generated>2026-06-26 06:37 UTC</generated>
+    <brain_revision>12</brain_revision>
+    <repo_commit>17da986</repo_commit>
+    <generated>2026-06-27 08:43 UTC</generated>
     <purpose>handoff</purpose>
   </fingerprint>
   <project>
     <name>Haven</name>
     <github_repo>zech-dexos/Haven</github_repo>
   </project>
-  <ai_briefing to="receiving AI">You are receiving a Continuity handoff. Read this entire file before responding. Last session summary: 0 records extracted. Read the operator_manual section — it tells you exactly how to work with this human.</ai_briefing>
+  <ai_briefing to="receiving AI">You are receiving a Continuity handoff. Read this entire file before responding. The previous AI (claude) switched because: end of session. Last session summary: built and deployed full voice biometrics layer — speaker ID + health/emotional signal analytics. APK installed on device. commit 2433018. XPRIZE requirements B and D substantially complete, A and C remain open.. Current task: Haven voice biometrics integration. There are 1 open question(s) that need resolution. Read the operator_manual section — it tells you exactly how to work with this human.</ai_briefing>
   <operator_manual note="Read before writing any code or making any suggestions.">
     <primary_model>claude</primary_model>
     <patching>Full files only. Use cat &lt;&lt;'EOF' heredoc. Never partial snippets.</patching>
@@ -19,8 +19,20 @@
   </operator_manual>
   <current_state>
     <goal>The goal is continuity of reasoning across multiple AI systems.</goal>
+    <task>
+      <what>Haven voice biometrics integration</what>
+    </task>
   </current_state>
   <ai_notes>
+    <note model="claude" when="2026-06-27T08:43">model: claude-sonnet-4-6
+task: Haven voice biometrics integration
+stopped_at: voice biometrics committed — AudioCaptureManager, SpeakerIdentifier, VoiceAnalyzer, VoiceContext, VoiceProfile, VoiceProfileDao, VoiceProfileManager, HavenDatabase all merged and pushed
+next: wire VoiceContext into Railway api.py so backend consumes voice_context and adjusts Haven system prompt and routing accordingly
+open: does Cloud Run need VPC connector to reach Railway DB?
+switching_because: end of session
+summary: built and deployed full voice biometrics layer — speaker ID + health/emotional signal analytics. APK installed on device. commit 2433018. XPRIZE requirements B and D substantially complete, A and C remain open.</note>
+    <note model="claude" when="2026-06-27T08:43">Stopped at: voice biometrics committed — AudioCaptureManager, SpeakerIdentifier, VoiceAnalyzer, VoiceContext, VoiceProfile, VoiceProfileDao, VoiceProfileManager, HavenDatabase all merged and pushed</note>
+    <note model="claude" when="2026-06-27T08:43">Next: wire VoiceContext into Railway api.py so backend consumes voice_context and adjusts Haven system prompt and routing accordingly</note>
     <note model="claude" when="2026-06-26T06:37">git add -A &amp;&amp; git commit -m "feat: voice biometrics - speaker ID, voice analytics, VoiceContext routing" &amp;&amp; git push</note>
     <note model="claude" when="2026-06-25T23:11"># Relationship Layer
 
@@ -80,22 +92,25 @@ This would allow GPT, Claude, and future models to continue work with minimal co
 
 </note>
   </ai_notes>
+  <open_questions>
+    <question>does Cloud Run need VPC connector to reach Railway DB?</question>
+  </open_questions>
   <git_state>
     <branch>main</branch>
-    <commit>eea9886</commit>
+    <commit>17da986</commit>
     <modified_files>
       <file>?? .continuity/brain.db-shm</file>
       <file>?? .continuity/brain.db-wal</file>
     </modified_files>
     <recent_commits>
+      <commit>17da986 continuity: update context package</commit>
       <commit>eea9886 continuity: update context package</commit>
       <commit>2433018 feat: voice biometrics - speaker ID, voice analytics, VoiceContext routing</commit>
       <commit>a4ca57f continuity: update context package</commit>
       <commit>cb4b92c continuity: add GPT relationship layer notes</commit>
-      <commit>aead510 continuity: update context package</commit>
     </recent_commits>
   </git_state>
   <session_history>
-    <session model="claude" when="2026-06-26T06:37">0 records extracted</session>
+    <session model="claude" when="2026-06-27T08:43" switched_because="end of session">built and deployed full voice biometrics layer — speaker ID + health/emotional signal analytics. APK installed on device. commit 2433018. XPRIZE requirements B and D substantially complete, A and C remain open.</session>
   </session_history>
 </continuity>
