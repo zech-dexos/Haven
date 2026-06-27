@@ -1,15 +1,15 @@
 <continuity version="0.3" purpose="handoff">
   <fingerprint>
-    <brain_revision>19</brain_revision>
-    <repo_commit>8542b8a</repo_commit>
-    <generated>2026-06-27 08:57 UTC</generated>
+    <brain_revision>21</brain_revision>
+    <repo_commit>ceb025d</repo_commit>
+    <generated>2026-06-27 09:01 UTC</generated>
     <purpose>handoff</purpose>
   </fingerprint>
   <project>
     <name>Haven</name>
     <github_repo>zech-dexos/Haven</github_repo>
   </project>
-  <ai_briefing to="receiving AI">You are receiving a Continuity handoff. Read this entire file before responding. The previous AI (claude) switched because: returning to Claude for implementation. You were specifically requested as the next AI. Last session summary: GPT validated Continuity handoff. Identified two missing features: workspace/file locations and structured decision records. Both queued for v0.4.. Current task: wire VoiceContext into Railway api.py. There are 1 open question(s) that need resolution. Read the operator_manual section — it tells you exactly how to work with this human.</ai_briefing>
+  <ai_briefing to="receiving AI">You are receiving a Continuity handoff. Read this entire file before responding. Last session summary: 0 records extracted. Current task: wire VoiceContext into Railway api.py. There are 1 open question(s) that need resolution. Read the operator_manual section — it tells you exactly how to work with this human.</ai_briefing>
   <operator_manual note="Read before writing any code or making any suggestions.">
     <primary_model>claude</primary_model>
     <patching>Full files only. Use cat &lt;&lt;'EOF' heredoc. Never partial snippets.</patching>
@@ -30,6 +30,9 @@
     </task>
   </current_state>
   <ai_notes>
+    <note model="claude" when="2026-06-27T09:01">cd ~/dev/haven/Haven
+continuity stop
+continuity handoff</note>
     <note model="claude" when="2026-06-27T08:54">model: gpt-4o
 task: wire VoiceContext into Railway api.py
 stopped_at: handoff discussion — no code written yet
@@ -47,28 +50,27 @@ next: wire VoiceContext into Railway api.py so backend consumes voice_context an
 open: does Cloud Run need VPC connector to reach Railway DB?
 switching_because: end of session
 summary: built and deployed full voice biometrics layer — speaker ID + health/emotional signal analytics. APK installed on device. commit 2433018. XPRIZE requirements B and D substantially complete, A and C remain open.</note>
-    <note model="claude" when="2026-06-27T08:43">Stopped at: voice biometrics committed — AudioCaptureManager, SpeakerIdentifier, VoiceAnalyzer, VoiceContext, VoiceProfile, VoiceProfileDao, VoiceProfileManager, HavenDatabase all merged and pushed</note>
   </ai_notes>
   <open_questions>
     <question>does Cloud Run need VPC connector to reach Railway DB?</question>
   </open_questions>
   <git_state>
     <branch>main</branch>
-    <commit>8542b8a</commit>
+    <commit>ceb025d</commit>
     <modified_files>
       <file>?? .continuity/brain.db-shm</file>
       <file>?? .continuity/brain.db-wal</file>
     </modified_files>
     <recent_commits>
+      <commit>ceb025d continuity: update context package</commit>
       <commit>8542b8a continuity: update context package</commit>
       <commit>92291c1 continuity: GPT feedback — architecture layer + structured decisions</commit>
       <commit>604bfc9 continuity: update context package</commit>
       <commit>55f1f97 continuity: update context package</commit>
-      <commit>17da986 continuity: update context package</commit>
     </recent_commits>
   </git_state>
   <session_history>
-    <session model="claude" when="2026-06-27T08:54" switched_because="returning to Claude for implementation">GPT validated Continuity handoff. Identified two missing features: workspace/file locations and structured decision records. Both queued for v0.4.</session>
+    <session model="claude" when="2026-06-27T09:01">0 records extracted</session>
     <session model="claude" when="2026-06-27T08:43" switched_because="end of session">built and deployed full voice biometrics layer — speaker ID + health/emotional signal analytics. APK installed on device. commit 2433018. XPRIZE requirements B and D substantially complete, A and C remain open.</session>
   </session_history>
 </continuity>
