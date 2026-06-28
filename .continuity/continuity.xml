@@ -1,8 +1,8 @@
 <continuity version="0.3" purpose="handoff">
   <fingerprint>
-    <brain_revision>39</brain_revision>
-    <repo_commit>7992d3b</repo_commit>
-    <generated>2026-06-27 12:43 UTC</generated>
+    <brain_revision>41</brain_revision>
+    <repo_commit>556d011</repo_commit>
+    <generated>2026-06-28 07:02 UTC</generated>
     <purpose>handoff</purpose>
   </fingerprint>
   <project>
@@ -53,6 +53,8 @@ switching_because: end of session
 summary: built and deployed full voice biometrics layer — speaker ID + health/emotional signal analytics. APK installed on device. commit 2433018. XPRIZE requirements B and D substantially complete, A and C remain open.</note>
   </ai_notes>
   <decisions>
+    <decision>XPRIZE requirement C complete — Firestore live telemetry verified, data flowing to haven_telemetry collection</decision>
+    <decision>XPRIZE requirement C complete — Firestore live telemetry verified, data flowing to haven_telemetry collection</decision>
     <decision why="Font/keyboard size not in public SDK — AccessibilityService navigates Settings UI instead">AccessibilityService handles: UI navigation, global actions, settings changes, button clicks</decision>
     <decision why="Stable API between LLM and Android prevents fragile prompt-driven UI navigation">Capability Layer: LLM outputs SET_TEXT_SIZE|CALL_CONTACT|SEND_SMS|OPEN_SETTINGS|etc, Android executes</decision>
     <decision why="Decouples conversational model from platform implementation">Haven is an agent not a chatbot — LLM emits structured intent, native Android executes it</decision>
@@ -61,18 +63,16 @@ summary: built and deployed full voice biometrics layer — speaker ID + health/
     <decision why="Silent distress is a real eldercare problem. Voice analytics already built for this.">Haven detects distress in voice even if user never says help — routes to emergency.</decision>
     <decision why="Personalization is what makes Haven irreplaceable vs generic AI">Haven learns elder speech patterns and preferences over time via voice profile.</decision>
     <decision why="Family tier monetization + safety net for elders living alone">Family dashboard — family sees activity, mood signals, alerts in real time.</decision>
-    <decision why="Elderly users may not ask for help even when they need it">Haven is proactive — checks in on user without being asked. Detects silence gaps.</decision>
-    <decision>Haven must control phone — not just respond. It is an agent not a chatbot.</decision>
   </decisions>
   <git_state>
     <branch>main</branch>
-    <commit>7992d3b</commit>
+    <commit>556d011</commit>
     <recent_commits>
+      <commit>556d011 continuity: update context package</commit>
       <commit>7992d3b continuity: update context package</commit>
       <commit>348995f continuity: update context package</commit>
       <commit>2e9c124 continuity: ignore WAL files</commit>
       <commit>80c1455 continuity: update context package</commit>
-      <commit>fdfa355 continuity: update context package</commit>
     </recent_commits>
   </git_state>
   <session_history>
