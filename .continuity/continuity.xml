@@ -1,8 +1,8 @@
 <continuity version="0.3" purpose="handoff">
   <fingerprint>
-    <brain_revision>43</brain_revision>
-    <repo_commit>cb02ab3</repo_commit>
-    <generated>2026-06-29 06:58 UTC</generated>
+    <brain_revision>45</brain_revision>
+    <repo_commit>3f396dc</repo_commit>
+    <generated>2026-06-29 07:13 UTC</generated>
     <purpose>handoff</purpose>
   </fingerprint>
   <project>
@@ -31,6 +31,9 @@
     </task>
   </current_state>
   <ai_notes>
+    <note model="claude" when="2026-06-29T07:13">cd ~/dev/haven/Haven
+source ~/dev/haven/dex-backend/.venv/bin/activate
+continuity stop</note>
     <note model="claude" when="2026-06-27T09:01">cd ~/dev/haven/Haven
 continuity stop
 continuity handoff</note>
@@ -44,17 +47,9 @@ to: claude
 summary: GPT validated Continuity handoff. Identified two missing features: workspace/file locations and structured decision records. Both queued for v0.4.</note>
     <note model="claude" when="2026-06-27T08:54">Stopped at: handoff discussion — no code written yet</note>
     <note model="claude" when="2026-06-27T08:54">Next: open api.py in dex-backend, add voice_context parsing and system prompt adjustment</note>
-    <note model="claude" when="2026-06-27T08:43">model: claude-sonnet-4-6
-task: Haven voice biometrics integration
-stopped_at: voice biometrics committed — AudioCaptureManager, SpeakerIdentifier, VoiceAnalyzer, VoiceContext, VoiceProfile, VoiceProfileDao, VoiceProfileManager, HavenDatabase all merged and pushed
-next: wire VoiceContext into Railway api.py so backend consumes voice_context and adjusts Haven system prompt and routing accordingly
-open: does Cloud Run need VPC connector to reach Railway DB?
-switching_because: end of session
-summary: built and deployed full voice biometrics layer — speaker ID + health/emotional signal analytics. APK installed on device. commit 2433018. XPRIZE requirements B and D substantially complete, A and C remain open.</note>
   </ai_notes>
   <decisions>
     <decision why="Cross-instance memory sync, user recognition, self-heal logging">Dex and Haven both write to Firestore per turn — live memory, not session-end only</decision>
-    <decision>XPRIZE requirement C complete — Firestore live telemetry verified, data flowing to haven_telemetry collection</decision>
     <decision>XPRIZE requirement C complete — Firestore live telemetry verified, data flowing to haven_telemetry collection</decision>
     <decision why="Font/keyboard size not in public SDK — AccessibilityService navigates Settings UI instead">AccessibilityService handles: UI navigation, global actions, settings changes, button clicks</decision>
     <decision why="Stable API between LLM and Android prevents fragile prompt-driven UI navigation">Capability Layer: LLM outputs SET_TEXT_SIZE|CALL_CONTACT|SEND_SMS|OPEN_SETTINGS|etc, Android executes</decision>
@@ -63,20 +58,21 @@ summary: built and deployed full voice biometrics layer — speaker ID + health/
     <decision why="Accessibility as core feature not add-on. Elder should never need to touch settings.">Haven controls phone — text size, keyboard size, display, calls, SMS via voice command.</decision>
     <decision why="Silent distress is a real eldercare problem. Voice analytics already built for this.">Haven detects distress in voice even if user never says help — routes to emergency.</decision>
     <decision why="Personalization is what makes Haven irreplaceable vs generic AI">Haven learns elder speech patterns and preferences over time via voice profile.</decision>
+    <decision why="Family tier monetization + safety net for elders living alone">Family dashboard — family sees activity, mood signals, alerts in real time.</decision>
   </decisions>
   <git_state>
     <branch>main</branch>
-    <commit>cb02ab3</commit>
+    <commit>3f396dc</commit>
     <recent_commits>
+      <commit>3f396dc continuity: update context package</commit>
       <commit>cb02ab3 continuity: update context package</commit>
       <commit>556d011 continuity: update context package</commit>
       <commit>7992d3b continuity: update context package</commit>
       <commit>348995f continuity: update context package</commit>
-      <commit>2e9c124 continuity: ignore WAL files</commit>
     </recent_commits>
   </git_state>
   <session_history>
-    <session model="claude" when="2026-06-27T09:01">0 records extracted</session>
+    <session model="claude" when="2026-06-29T07:13">0 records extracted</session>
     <session model="claude" when="2026-06-27T08:43" switched_because="end of session">built and deployed full voice biometrics layer — speaker ID + health/emotional signal analytics. APK installed on device. commit 2433018. XPRIZE requirements B and D substantially complete, A and C remain open.</session>
   </session_history>
 </continuity>
