@@ -1,7 +1,7 @@
 <continuity version="0.3" purpose="handoff">
   <fingerprint>
-    <brain_revision>57</brain_revision>
-    <repo_commit>c034e58</repo_commit>
+    <brain_revision>58</brain_revision>
+    <repo_commit>6cb45dc</repo_commit>
     <generated>2026-07-01 22:41 UTC</generated>
     <purpose>handoff</purpose>
   </fingerprint>
@@ -9,7 +9,7 @@
     <name>Haven</name>
     <github_repo>zech-dexos/Haven</github_repo>
   </project>
-  <ai_briefing to="receiving AI">You are receiving a Continuity handoff. Read this entire file before responding. Last session summary: 0 records extracted. Current task: Haven relationship memory expanded. There are 1 open question(s) that need resolution. Read the operator_manual section — it tells you exactly how to work with this human.</ai_briefing>
+  <ai_briefing to="receiving AI">You are receiving a Continuity handoff. Read this entire file before responding. Last session summary: 0 records extracted. Current task: Vertex AI Cloud Run deployment — XPRIZE requirement A. Why: Judges require Gemini via Vertex AI, not OpenRouter. Must deploy to Cloud Run.. There are 1 open question(s) that need resolution. Read the operator_manual section — it tells you exactly how to work with this human.</ai_briefing>
   <operator_manual note="Read before writing any code or making any suggestions.">
     <primary_model>claude</primary_model>
     <patching>Full files only. Use cat &lt;&lt;'EOF' heredoc. Never partial snippets.</patching>
@@ -26,7 +26,8 @@
   <current_state>
     <goal>Haven accessibility — keyboard size, text size, phone controls via voice</goal>
     <task>
-      <what>Haven relationship memory expanded</what>
+      <what>Vertex AI Cloud Run deployment — XPRIZE requirement A</what>
+      <why>Judges require Gemini via Vertex AI, not OpenRouter. Must deploy to Cloud Run.</why>
     </task>
   </current_state>
   <ai_notes>
@@ -63,17 +64,13 @@ continuity stop</note>
   </open_questions>
   <git_state>
     <branch>main</branch>
-    <commit>c034e58</commit>
-    <modified_files>
-      <file>?? patch_fix_881.py</file>
-      <file>?? patch_remove_bridge.py</file>
-    </modified_files>
+    <commit>6cb45dc</commit>
     <recent_commits>
+      <commit>6cb45dc continuity: update context package</commit>
       <commit>c034e58 continuity: update context package</commit>
       <commit>af6b366 fix: remove HavenNetworkBridge references from MainActivity</commit>
       <commit>d20c950 cleanup: remove broken artifacts, preserve HavenActionExecutor capability layer</commit>
       <commit>ec10da2 fix: restore uncorrupted package string serialization while maintaining fuzzy wildcard evaluation</commit>
-      <commit>c868e2a fix: implement phonetic intent parsing to bypass microphone transcription typos</commit>
     </recent_commits>
   </git_state>
   <session_history>
