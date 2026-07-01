@@ -72,7 +72,6 @@ class MainActivity : AppCompatActivity() {
     private var workflowSmsMessage: String? = null
     private lateinit var audioCaptureManager: AudioCaptureManager
     private lateinit var speakerIdentifier: SpeakerIdentifier
-    private lateinit var networkBridge: HavenNetworkBridge
     private var currentVoiceContext: VoiceContext? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -88,10 +87,8 @@ class MainActivity : AppCompatActivity() {
         prefs = getSharedPreferences("haven_prefs", MODE_PRIVATE)
         audioCaptureManager = AudioCaptureManager(this)
         speakerIdentifier = SpeakerIdentifier(this)
-        networkBridge = HavenNetworkBridge(this)
         audioCaptureManager = AudioCaptureManager(this)
         speakerIdentifier = SpeakerIdentifier(this)
-        networkBridge = HavenNetworkBridge(this)
         userId = prefs.getString("user_id", null) ?: run {
             val newId = UUID.randomUUID().toString()
             prefs.edit().putString("user_id", newId).apply()
@@ -881,7 +878,7 @@ class MainActivity : AppCompatActivity() {
                 val rawResponseStr = response.body?.string() ?: "{}"
                 
                 // Use the bridge to process device actions and extract the voice lines
-                val responseText = networkBridge.processIncomingResponse(rawResponseStr)
+                val responseText = if (JSONObject(rawResponseStr).has("voice_response")) JSONObject(rawResponseStr).optString("voice_response") else JSONObject(rawResponseStr).optString("response", "I am right here with you.")
                 
                 conversationHistory.add(JSONObject().put("role", "assistant").put("content", responseText))
                 withContext(Dispatchers.Main) {
