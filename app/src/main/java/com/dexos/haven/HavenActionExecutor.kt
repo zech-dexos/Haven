@@ -3,42 +3,38 @@ package com.dexos.haven
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import org.json.JSONObject
 import android.util.Log
 import android.app.DownloadManager
 
 class HavenActionExecutor {
 
+    /**
+     * COMPATIBILITY ROUTER: Keeps HavenNetworkBridge from crashing the compiler.
+     * Maps the old execution footprint straight into the new async wildcard pipeline.
+     */
     fun executeDeviceAction(context: Context, jsonResponseString: String) {
-        // Run asynchronously to prevent locking the UI / main execution thread
+        processVoiceIntents(context, jsonResponseString)
+    }
+
+    /**
+     * CORE PATTERN: Process fuzzy wildcard lookups completely independently of the network shell.
+     * This stops case, capitalization, or bracket variations from blocking your app controls.
+     */
+    fun processVoiceIntents(context: Context, spokenText: String) {
         Thread {
             try {
-                // Parse the native uncorrupted response object directly to protect system casing
-                val rootJson = JSONObject(jsonResponseString)
-                
-                // Extract voice context safely
-                val voiceText = rootJson.optString("voice_response", "").lowercase().trim()
-                
-                // Read the device action block safely
-                val deviceAction = if (rootJson.has("device_action") && !rootJson.isNull("device_action")) {
-                    rootJson.getJSONObject("device_action")
-                } else {
-                    null
-                }
-                val actionType = deviceAction?.optString("type", "")?.lowercase() ?: ""
+                val cleanText = spokenText.lowercase().trim()
 
-                // ROOT ARCHITECTURE: Case-Insensitive Wildcard Mappings
-                val googlePlayVariations = listOf("google play", "googleplay", "play store", "playstore", "googl play", "googll play", "vending")
-                val downloadVariations = listOf("download", "downloads", "downloaded", "my downloads", "open downloads")
-                val solitaireVariations = listOf("solitaire", "solitare", "solatair", "solitaire game")
+                // Wildcard Arrays matching any transcription typo known
+                val playStoreKeywords = listOf("google play", "googleplay", "play store", "playstore", "googl play", "googll play", "vending")
+                val downloadKeywords = listOf("download", "downloads", "downloaded", "my downloads", "open downloads")
+                val solitaireKeywords = listOf("solitaire", "solitare", "solatair", "solitaire game")
 
-                // Map variations instantly to their corresponding systemic flags
-                val matchesPlayStore = googlePlayVariations.any { voiceText.contains(it) || actionType.contains(it) }
-                val matchesDownloads = downloadVariations.any { voiceText.contains(it) || actionType.contains(it) }
-                val matchesSolitaire = solitaireVariations.any { voiceText.contains(it) }
+                val matchesPlayStore = playStoreKeywords.any { cleanText.contains(it) }
+                val matchesDownloads = downloadKeywords.any { cleanText.contains(it) }
+                val matchesSolitaire = solitaireKeywords.any { cleanText.contains(it) }
 
                 when {
-                    // 1. Solitaire Intent Route
                     matchesSolitaire -> {
                         val packageName = "com.microsoft.solitairecollection"
                         val launchIntent = context.packageManager.getLaunchIntentForPackage(packageName)
@@ -55,7 +51,6 @@ class HavenActionExecutor {
                         }
                     }
 
-                    // 2. Google Play Store Intent Route
                     matchesPlayStore -> {
                         val packageName = "com.android.vending"
                         val launchIntent = context.packageManager.getLaunchIntentForPackage(packageName)
@@ -72,16 +67,13 @@ class HavenActionExecutor {
                         }
                     }
 
-                    // 3. Downloads Framework Intent Route
                     matchesDownloads -> {
-                        Log.d("HavenAction", "Executing explicit document layer routing...")
                         val intent = Intent(DownloadManager.ACTION_VIEW_DOWNLOADS).apply {
                             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         }
                         try {
                             context.startActivity(intent)
                         } catch (e: Exception) {
-                            // Unified Android fallback picker structure if download folder restrictions are active
                             val fallbackIntent = Intent(Intent.ACTION_GET_CONTENT).apply {
                                 type = "*/*"
                                 addCategory(Intent.CATEGORY_OPENABLE)
@@ -91,9 +83,8 @@ class HavenActionExecutor {
                         }
                     }
                 }
-
             } catch (e: Exception) {
-                Log.e("HavenAction", "Threaded variable engine execution error", e)
+                Log.e("HavenAction", "Intent execution layer faulted", e)
             }
         }.start()
     }
