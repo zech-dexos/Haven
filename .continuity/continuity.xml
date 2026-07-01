@@ -1,7 +1,7 @@
 <continuity version="0.3" purpose="handoff">
   <fingerprint>
     <brain_revision>57</brain_revision>
-    <repo_commit>af6b366</repo_commit>
+    <repo_commit>c034e58</repo_commit>
     <generated>2026-07-01 22:41 UTC</generated>
     <purpose>handoff</purpose>
   </fingerprint>
@@ -63,17 +63,17 @@ continuity stop</note>
   </open_questions>
   <git_state>
     <branch>main</branch>
-    <commit>af6b366</commit>
+    <commit>c034e58</commit>
     <modified_files>
       <file>?? patch_fix_881.py</file>
       <file>?? patch_remove_bridge.py</file>
     </modified_files>
     <recent_commits>
+      <commit>c034e58 continuity: update context package</commit>
       <commit>af6b366 fix: remove HavenNetworkBridge references from MainActivity</commit>
       <commit>d20c950 cleanup: remove broken artifacts, preserve HavenActionExecutor capability layer</commit>
       <commit>ec10da2 fix: restore uncorrupted package string serialization while maintaining fuzzy wildcard evaluation</commit>
       <commit>c868e2a fix: implement phonetic intent parsing to bypass microphone transcription typos</commit>
-      <commit>f291d75 fix: enforce strict Pydantic response schema mapping on backend to eliminate plain text hallucinations</commit>
     </recent_commits>
   </git_state>
   <session_history>
