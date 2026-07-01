@@ -1,15 +1,15 @@
 <continuity version="0.3" purpose="handoff">
   <fingerprint>
-    <brain_revision>55</brain_revision>
-    <repo_commit>a8e4b5e</repo_commit>
-    <generated>2026-06-30 06:59 UTC</generated>
+    <brain_revision>57</brain_revision>
+    <repo_commit>af6b366</repo_commit>
+    <generated>2026-07-01 22:41 UTC</generated>
     <purpose>handoff</purpose>
   </fingerprint>
   <project>
     <name>Haven</name>
     <github_repo>zech-dexos/Haven</github_repo>
   </project>
-  <ai_briefing to="receiving AI">You are receiving a Continuity handoff. Read this entire file before responding. The previous AI (claude) switched because: session limit reached. Last session summary: completed Firestore telemetry (req C), Dex live memory per-turn, Haven relationship memory expansion, dex_memory.py with user recognition and self-heal logging. Requirements B and C done. A and D remain.. Current task: Haven relationship memory expanded. There are 1 open question(s) that need resolution. Read the operator_manual section — it tells you exactly how to work with this human.</ai_briefing>
+  <ai_briefing to="receiving AI">You are receiving a Continuity handoff. Read this entire file before responding. Last session summary: 0 records extracted. Current task: Haven relationship memory expanded. There are 1 open question(s) that need resolution. Read the operator_manual section — it tells you exactly how to work with this human.</ai_briefing>
   <operator_manual note="Read before writing any code or making any suggestions.">
     <primary_model>claude</primary_model>
     <patching>Full files only. Use cat &lt;&lt;'EOF' heredoc. Never partial snippets.</patching>
@@ -30,6 +30,9 @@
     </task>
   </current_state>
   <ai_notes>
+    <note model="claude" when="2026-07-01T22:41">source ~/.venv/bin/activate
+continuity stop
+continuity handoff</note>
     <note model="claude" when="2026-06-29T07:13">model: claude-sonnet-4-6
 task: Haven relationship memory expanded
 stopped_at: api.py patched and pushed — memory_to_prompt now handles birthdays, family relationships, hobbies, fears, emotions, important dates, favorites
@@ -42,9 +45,6 @@ summary: completed Firestore telemetry (req C), Dex live memory per-turn, Haven 
     <note model="claude" when="2026-06-29T07:13">cd ~/dev/haven/Haven
 source ~/dev/haven/dex-backend/.venv/bin/activate
 continuity stop</note>
-    <note model="claude" when="2026-06-27T09:01">cd ~/dev/haven/Haven
-continuity stop
-continuity handoff</note>
   </ai_notes>
   <decisions>
     <decision why="Cross-instance memory sync, user recognition, self-heal logging">Dex and Haven both write to Firestore per turn — live memory, not session-end only</decision>
@@ -63,17 +63,21 @@ continuity handoff</note>
   </open_questions>
   <git_state>
     <branch>main</branch>
-    <commit>a8e4b5e</commit>
+    <commit>af6b366</commit>
+    <modified_files>
+      <file>?? patch_fix_881.py</file>
+      <file>?? patch_remove_bridge.py</file>
+    </modified_files>
     <recent_commits>
-      <commit>a8e4b5e continuity: update context package</commit>
-      <commit>d1399fa continuity: update context package</commit>
-      <commit>efc7ea1 continuity: update context package</commit>
-      <commit>07fb895 continuity: update context package</commit>
-      <commit>facd2c4 continuity: update context package</commit>
+      <commit>af6b366 fix: remove HavenNetworkBridge references from MainActivity</commit>
+      <commit>d20c950 cleanup: remove broken artifacts, preserve HavenActionExecutor capability layer</commit>
+      <commit>ec10da2 fix: restore uncorrupted package string serialization while maintaining fuzzy wildcard evaluation</commit>
+      <commit>c868e2a fix: implement phonetic intent parsing to bypass microphone transcription typos</commit>
+      <commit>f291d75 fix: enforce strict Pydantic response schema mapping on backend to eliminate plain text hallucinations</commit>
     </recent_commits>
   </git_state>
   <session_history>
-    <session model="claude" when="2026-06-29T07:13" switched_because="session limit reached">completed Firestore telemetry (req C), Dex live memory per-turn, Haven relationship memory expansion, dex_memory.py with user recognition and self-heal logging. Requirements B and C done. A and D remain.</session>
+    <session model="claude" when="2026-07-01T22:41">0 records extracted</session>
     <session model="claude" when="2026-06-27T08:43" switched_because="end of session">built and deployed full voice biometrics layer — speaker ID + health/emotional signal analytics. APK installed on device. commit 2433018. XPRIZE requirements B and D substantially complete, A and C remain open.</session>
   </session_history>
 </continuity>
