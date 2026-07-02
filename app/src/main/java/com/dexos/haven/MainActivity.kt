@@ -861,6 +861,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun sendToHaven(userMessage: String) {
+        // Fire capability layer on user's spoken intent before sending to backend
+        HavenActionExecutor().processVoiceIntents(this, userMessage)
         isWaitingForResponse = true
         statusText.text = "Haven is thinking..."
         conversationHistory.add(JSONObject().put("role", "user").put("content", userMessage))
