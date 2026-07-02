@@ -1,8 +1,8 @@
 <continuity version="0.3" purpose="handoff">
   <fingerprint>
-    <brain_revision>58</brain_revision>
-    <repo_commit>6cb45dc</repo_commit>
-    <generated>2026-07-01 22:41 UTC</generated>
+    <brain_revision>60</brain_revision>
+    <repo_commit>71b8803</repo_commit>
+    <generated>2026-07-02 08:18 UTC</generated>
     <purpose>handoff</purpose>
   </fingerprint>
   <project>
@@ -31,6 +31,24 @@
     </task>
   </current_state>
   <ai_notes>
+    <note model="claude" when="2026-07-02T08:18">te
+(.venv) jedediah@DESKTOP-J2K2RV2:~/dev/haven/Haven$ # Copy to repo
+cp /mnt/c/Users/zechd/Downloads/HavenCapabilityLayer.kt \
+   ~/dev/haven/Haven/app/src/main/java/com/dexos/haven/
+
+cp /mnt/c/Users/zechd/Downloads/patch_main_capability.py \
+   ~/dev/haven/Haven/
+
+# Apply the MainActivity patch
+cd ~/dev/haven/Haven
+python3 patch_main_capability.py
+
+# Build and install
+./gradlew installDebug 2&gt;&amp;1 | tail -5
+cp: cannot stat '/mnt/c/Users/zechd/Downloads/HavenCapabilityLayer.kt': No such file or directory
+cp: cannot stat '/mnt/c/Users/zechd/Downloads/patch_main_capability.py': No such file or directory
+python3: can't open file '/home/jedediah/dev/haven/Haven/patch_main_capability.py': [Errno 2] No such file or directory
+</note>
     <note model="claude" when="2026-07-01T22:41">source ~/.venv/bin/activate
 continuity stop
 continuity handoff</note>
@@ -43,9 +61,6 @@ switching_because: session limit reached
 summary: completed Firestore telemetry (req C), Dex live memory per-turn, Haven relationship memory expansion, dex_memory.py with user recognition and self-heal logging. Requirements B and C done. A and D remain.</note>
     <note model="claude" when="2026-06-29T07:13">Stopped at: api.py patched and pushed — memory_to_prompt now handles birthdays, family relationships, hobbies, fears, emotions, important dates, favorites</note>
     <note model="claude" when="2026-06-29T07:13">Next: Vertex AI Cloud Run deployment — XPRIZE requirement A</note>
-    <note model="claude" when="2026-06-29T07:13">cd ~/dev/haven/Haven
-source ~/dev/haven/dex-backend/.venv/bin/activate
-continuity stop</note>
   </ai_notes>
   <decisions>
     <decision why="Cross-instance memory sync, user recognition, self-heal logging">Dex and Haven both write to Firestore per turn — live memory, not session-end only</decision>
@@ -64,16 +79,20 @@ continuity stop</note>
   </open_questions>
   <git_state>
     <branch>main</branch>
-    <commit>6cb45dc</commit>
+    <commit>71b8803</commit>
+    <modified_files>
+      <file>?? patch_agent.py</file>
+    </modified_files>
     <recent_commits>
+      <commit>71b8803 feat: wire HavenActionExecutor to user voice input</commit>
+      <commit>c304b06 continuity: update context package</commit>
       <commit>6cb45dc continuity: update context package</commit>
       <commit>c034e58 continuity: update context package</commit>
       <commit>af6b366 fix: remove HavenNetworkBridge references from MainActivity</commit>
-      <commit>d20c950 cleanup: remove broken artifacts, preserve HavenActionExecutor capability layer</commit>
-      <commit>ec10da2 fix: restore uncorrupted package string serialization while maintaining fuzzy wildcard evaluation</commit>
     </recent_commits>
   </git_state>
   <session_history>
+    <session model="claude" when="2026-07-02T08:18">0 records extracted</session>
     <session model="claude" when="2026-07-01T22:41">0 records extracted</session>
     <session model="claude" when="2026-06-27T08:43" switched_because="end of session">built and deployed full voice biometrics layer — speaker ID + health/emotional signal analytics. APK installed on device. commit 2433018. XPRIZE requirements B and D substantially complete, A and C remain open.</session>
   </session_history>
