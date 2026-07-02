@@ -1,8 +1,8 @@
 <continuity version="0.3" purpose="handoff">
   <fingerprint>
     <brain_revision>60</brain_revision>
-    <repo_commit>71b8803</repo_commit>
-    <generated>2026-07-02 08:18 UTC</generated>
+    <repo_commit>aa77c17</repo_commit>
+    <generated>2026-07-02 08:19 UTC</generated>
     <purpose>handoff</purpose>
   </fingerprint>
   <project>
@@ -79,16 +79,16 @@ summary: completed Firestore telemetry (req C), Dex live memory per-turn, Haven 
   </open_questions>
   <git_state>
     <branch>main</branch>
-    <commit>71b8803</commit>
+    <commit>aa77c17</commit>
     <modified_files>
       <file>?? patch_agent.py</file>
     </modified_files>
     <recent_commits>
+      <commit>aa77c17 continuity: update context package</commit>
       <commit>71b8803 feat: wire HavenActionExecutor to user voice input</commit>
       <commit>c304b06 continuity: update context package</commit>
       <commit>6cb45dc continuity: update context package</commit>
       <commit>c034e58 continuity: update context package</commit>
-      <commit>af6b366 fix: remove HavenNetworkBridge references from MainActivity</commit>
     </recent_commits>
   </git_state>
   <session_history>
