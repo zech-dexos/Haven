@@ -29,13 +29,36 @@ class HavenAccessibilityService : AccessibilityService() {
         }
         
         fun openApp(packageName: String): Boolean {
-            val context = instance ?: return false
-            val intent = context.packageManager.getLaunchIntentForPackage(packageName)
-            return if (intent != null) {
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                context.startActivity(intent)
+            val ctx = instance ?: return false
+            return try {
+                // Try direct launch first
+                val intent = ctx.packageManager.getLaunchIntentForPackage(packageName)
+                if (intent != null) {
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    ctx.startActivity(intent)
+                    return true
+                }
+                // Fallback: ACTION_MAIN with CATEGORY_LAUNCHER
+                val fallback = Intent(Intent.ACTION_MAIN).apply {
+                    addCategory(Intent.CATEGORY_LAUNCHER)
+                    setPackage(packageName)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                ctx.startActivity(fallback)
                 true
-            } else false
+            } catch (e: Exception) {
+                // Last resort: open via market URI
+                try {
+                    val market = Intent(Intent.ACTION_VIEW).apply {
+                        data = android.net.Uri.parse("market://details?id=$packageName")
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    ctx.startActivity(market)
+                    true
+                } catch (e2: Exception) {
+                    false
+                }
+            }
         }
         
         fun performBack(): Boolean {

@@ -54,7 +54,6 @@ class MainActivity : AppCompatActivity() {
     private val RAILWAY_URL = "https://dex-backend-production-2bbe.up.railway.app/haven_api"
     private val TTS_URL = "https://dex-backend-production-2bbe.up.railway.app/haven_tts_free"
     private val conversationHistory = mutableListOf<JSONObject>()
-    private val havenCore: HavenCore by lazy { HavenCore(this, HavenCapabilityLayer(this), HavenActionExecutor()) }
     private var isSpeaking = false
     private var isWaitingForResponse = false
     private lateinit var userId: String
@@ -861,81 +860,56 @@ class MainActivity : AppCompatActivity() {
         return false
     }
 
-
     private fun sendToHaven(userMessage: String) {
-        havenCore.handle(
-            input = userMessage,
-            onLocalSuccess = { spokenResponse ->
-                conversationHistory.add(JSONObject().put("role", "user").put("content", userMessage))
-                conversationHistory.add(JSONObject().put("role", "assistant").put("content", spokenResponse))
-                addBubble(spokenResponse, isUser = false)
-                speakWithGTTS(spokenResponse)
-            },
-            sendToBackend = { fallback ->
-                isWaitingForResponse = true
-                statusText.text = "Haven is thinking..."
-                conversationHistory.add(JSONObject().put("role", "user").put("content", fallback))
-                val body = JSONObject()
-                    .put("messages", JSONArray(conversationHistory.toString()))
-                    .put("user_id", userId)
-                    .toString()
-                val request = Request.Builder()
-                    .url(RAILWAY_URL)
-                    .post(body.toRequestBody("application/json".toMediaType()))
-                    .build()
-                CoroutineScope(Dispatchers.IO).launch {
-                    try {
-                        val response = client.newCall(request).execute()
-                        val rawJson = JSONObject(response.body?.string() ?: "{}")
-
-                        val responseText = when {
-                            rawJson.has("voice_response") -> rawJson.optString("voice_response")
-                            rawJson.has("response") -> rawJson.optString("response")
-                            else -> "I am right here with you."
-                        }
-
-                        // Execute device action if backend returned one
-                        if (rawJson.has("device_action") && !rawJson.isNull("device_action")) {
-                            val da = rawJson.getJSONObject("device_action")
-                            val actionType = da.optString("type", "")
-                            val pkg = da.optString("package", "")
-                            val query = da.optString("query", "")
-
-                            val actionText = when (actionType) {
-                                "OPEN_APP"     -> if (pkg.isNotEmpty()) "open app $pkg" else "open $query"
-                                "SEARCH_PLAY"  -> "open play store search $query"
-                                "CALL"         -> "call $query"
-                                "SMS"          -> "text $query"
-                                "OPEN_FILES"   -> "open downloads"
-                                "OPEN_SETTINGS"-> "open settings"
-                                else           -> ""
-                            }
-                            if (actionText.isNotEmpty()) {
-                                HavenActionExecutor().executeDeviceAction(this@MainActivity, actionText)
-                            }
-                        }
-
-                        conversationHistory.add(JSONObject().put("role", "assistant").put("content", responseText))
-                        withContext(Dispatchers.Main) {
-                            isWaitingForResponse = false
-                            addBubble(responseText, isUser = false)
-                            micButton.text = "Tap to interrupt"
-                            micButton.isEnabled = true
-                            statusText.text = "Haven is speaking..."
-                            speakWithGTTS(responseText)
-                        }
-                    } catch (e: Exception) {
-                        withContext(Dispatchers.Main) {
-                            isWaitingForResponse = false
-                            statusText.text = "Connection error."
-                            micButton.text = "Speak to Haven"
-                            micButton.isEnabled = true
-                        }
-                    }
+        // Capability layer — local intent handling before backend
+        val capability = HavenCapabilityLayer(this)
+        val action = capability.process(userMessage)
+        if (action != null && action.handled) {
+            conversationHistory.add(JSONObject().put("role", "user").put("content", userMessage))
+            conversationHistory.add(JSONObject().put("role", "assistant").put("content", action.spokenResponse))
+            addBubble(action.spokenResponse, isUser = false)
+            speakWithGTTS(action.spokenResponse)
+            return
+        }
+        isWaitingForResponse = true
+        statusText.text = "Haven is thinking..."
+        conversationHistory.add(JSONObject().put("role", "user").put("content", userMessage))
+        val body = JSONObject()
+            .put("messages", JSONArray(conversationHistory.toString()))
+            .put("user_id", userId)
+            .toString()
+        val request = Request.Builder()
+            .url(RAILWAY_URL)
+            .post(body.toRequestBody("application/json".toMediaType()))
+            .build()
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = client.newCall(request).execute()
+                val rawResponseStr = response.body?.string() ?: "{}"
+                
+                // Use the bridge to process device actions and extract the voice lines
+                val responseText = if (JSONObject(rawResponseStr).has("voice_response")) JSONObject(rawResponseStr).optString("voice_response") else JSONObject(rawResponseStr).optString("response", "I am right here with you.")
+                
+                conversationHistory.add(JSONObject().put("role", "assistant").put("content", responseText))
+                withContext(Dispatchers.Main) {
+                    isWaitingForResponse = false
+                    addBubble(responseText, isUser = false)
+                    micButton.text = "Tap to interrupt"
+                    micButton.isEnabled = true
+                    statusText.text = "Haven is speaking..."
+                    speakWithGTTS(responseText)
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    isWaitingForResponse = false
+                    statusText.text = "Connection error."
+                    micButton.text = "Speak to Haven"
+                    micButton.isEnabled = true
                 }
             }
-        )
+        }
     }
+
     private fun splitIntoChunks(text: String): MutableList<String> {
         val sentences = text.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.isNotBlank() }
         return if (sentences.isEmpty()) mutableListOf(text) else sentences.toMutableList()
