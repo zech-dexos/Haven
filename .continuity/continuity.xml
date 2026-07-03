@@ -1,8 +1,8 @@
 <continuity version="0.3" purpose="handoff">
   <fingerprint>
     <brain_revision>60</brain_revision>
-    <repo_commit>e0009df</repo_commit>
-    <generated>2026-07-03 10:38 UTC</generated>
+    <repo_commit>2e68c2e</repo_commit>
+    <generated>2026-07-03 12:25 UTC</generated>
     <purpose>handoff</purpose>
   </fingerprint>
   <project>
@@ -79,21 +79,13 @@ summary: completed Firestore telemetry (req C), Dex live memory per-turn, Haven 
   </open_questions>
   <git_state>
     <branch>main</branch>
-    <commit>e0009df</commit>
-    <modified_files>
-      <file>M app/src/main/java/com/dexos/haven/HavenAccessibilityService.kt</file>
-      <file>M app/src/main/java/com/dexos/haven/MainActivity.kt</file>
-      <file>?? app/src/main/java/com/dexos/haven/HavenCapabilityLayer.kt</file>
-      <file>?? patch_agent.py</file>
-      <file>?? patch_capability_accessibility.py</file>
-      <file>?? patch_main_capability.py</file>
-    </modified_files>
+    <commit>2e68c2e</commit>
     <recent_commits>
+      <commit>2e68c2e feat: HavenCore orchestration spine + device action from backend</commit>
+      <commit>8838c4e continuity: update context package</commit>
       <commit>e0009df Added &lt;queries&gt; block to AndroidManifest.xml to resolve manifest merger error and enable package visibility</commit>
       <commit>2bc6ee3 continuity: update context package</commit>
       <commit>aa77c17 continuity: update context package</commit>
-      <commit>71b8803 feat: wire HavenActionExecutor to user voice input</commit>
-      <commit>c304b06 continuity: update context package</commit>
     </recent_commits>
   </git_state>
   <session_history>
