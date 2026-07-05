@@ -610,9 +610,12 @@ class MainActivity : AppCompatActivity() {
             }
             if (appQuery.isNotEmpty()) {
                 val found = openAppByLabel(appQuery)
-                val msg = if (found) "Opening $appQuery." else "I couldn't find $appQuery on your phone."
-                say(msg)
-                return true
+                if (found) {
+                    say("Opening $appQuery.")
+                    return true
+                }
+                // Not found locally — fall through to backend
+                return false
             }
         }
 
@@ -900,18 +903,49 @@ class MainActivity : AppCompatActivity() {
                             val actionType = da.optString("type", "")
                             val pkg = da.optString("package", "")
                             val query = da.optString("query", "")
-
-                            val actionText = when (actionType) {
-                                "OPEN_APP"     -> if (pkg.isNotEmpty()) "open app $pkg" else "open $query"
-                                "SEARCH_PLAY"  -> "open play store search $query"
-                                "CALL"         -> "call $query"
-                                "SMS"          -> "text $query"
-                                "OPEN_FILES"   -> "open downloads"
-                                "OPEN_SETTINGS"-> "open settings"
-                                else           -> ""
-                            }
-                            if (actionText.isNotEmpty()) {
-                                HavenActionExecutor().executeDeviceAction(this@MainActivity, actionText)
+                            when (actionType) {
+                                "OPEN_APP" -> {
+                                    if (pkg.isNotEmpty()) {
+                                        val launch = packageManager.getLaunchIntentForPackage(pkg)
+                                        if (launch != null) {
+                                            launch.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                                            startActivity(launch)
+                                        } else {
+                                            val storeIntent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
+                                                data = android.net.Uri.parse("market://search?q=${query.ifEmpty { pkg }}")
+                                                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                                            }
+                                            startActivity(storeIntent)
+                                        }
+                                    } else if (query.isNotEmpty()) {
+                                        val storeIntent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
+                                            data = android.net.Uri.parse("market://search?q=$query")
+                                            addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                                        }
+                                        startActivity(storeIntent)
+                                    }
+                                }
+                                "SEARCH_PLAY" -> {
+                                    val searchQuery = query.ifEmpty { pkg }
+                                    val searchIntent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
+                                        data = android.net.Uri.parse("market://search?q=${android.net.Uri.encode(searchQuery)}&c=apps")
+                                        setPackage("com.android.vending")
+                                        addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    }
+                                    try {
+                                        startActivity(searchIntent)
+                                    } catch (e: Exception) {
+                                        val fallback = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
+                                            data = android.net.Uri.parse("https://play.google.com/store/search?q=${android.net.Uri.encode(searchQuery)}")
+                                            addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                                        }
+                                        startActivity(fallback)
+                                    }
+                                }
+                                "CALL" -> HavenActionExecutor().executeDeviceAction(this@MainActivity, "call $query")
+                                "SMS"  -> HavenActionExecutor().executeDeviceAction(this@MainActivity, "text $query")
+                                "OPEN_FILES" -> HavenActionExecutor().executeDeviceAction(this@MainActivity, "open downloads")
+                                "OPEN_SETTINGS" -> HavenActionExecutor().executeDeviceAction(this@MainActivity, "open settings")
                             }
                         }
 

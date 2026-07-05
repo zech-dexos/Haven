@@ -43,11 +43,19 @@ class HavenActionExecutor {
                             context.startActivity(launchIntent)
                         } else {
                             val playStoreIntent = Intent(Intent.ACTION_VIEW).apply {
-                                data = Uri.parse("https://google.com")
+                                data = Uri.parse("market://search?q=solitaire&c=apps")
                                 setPackage("com.android.vending")
                                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                             }
-                            context.startActivity(playStoreIntent)
+                            try {
+                                context.startActivity(playStoreIntent)
+                            } catch (e: Exception) {
+                                val web = Intent(Intent.ACTION_VIEW).apply {
+                                    data = Uri.parse("https://play.google.com/store/search?q=solitaire&c=apps")
+                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                }
+                                context.startActivity(web)
+                            }
                         }
                     }
 
@@ -59,11 +67,19 @@ class HavenActionExecutor {
                             context.startActivity(launchIntent)
                         } else {
                             val playStoreIntent = Intent(Intent.ACTION_VIEW).apply {
-                                data = Uri.parse("https://google.com")
+                                data = Uri.parse("market://search?q=solitaire&c=apps")
                                 setPackage("com.android.vending")
                                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                             }
-                            context.startActivity(playStoreIntent)
+                            try {
+                                context.startActivity(playStoreIntent)
+                            } catch (e: Exception) {
+                                val web = Intent(Intent.ACTION_VIEW).apply {
+                                    data = Uri.parse("https://play.google.com/store/search?q=solitaire&c=apps")
+                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                }
+                                context.startActivity(web)
+                            }
                         }
                     }
 
