@@ -478,7 +478,7 @@ class MainActivity : AppCompatActivity() {
             return true
         }
 
-        if (lower.contains("call") || lower.contains("dial")) {
+        if ((lower.startsWith("call") || lower.startsWith("dial") || lower.contains("please call") || lower.contains("can you call") || lower.contains("i need to call") || lower.contains("call my") || lower.contains("call her") || lower.contains("call him")) && !lower.contains("what can") && !lower.contains("recall") && !lower.contains("can you do")) {
             val triggerWords = listOf("call", "dial")
             var name = lower
             for (trigger in triggerWords) {
