@@ -828,7 +828,15 @@ class MainActivity : AppCompatActivity() {
                                         startActivity(fallback)
                                     }
                                 }
-                                "CALL" -> HavenActionExecutor().executeDeviceAction(this@MainActivity, "call $query")
+                                "CALL" -> {
+                                    val dialIntent = android.content.Intent(android.content.Intent.ACTION_DIAL).apply {
+                                        if (query.isNotEmpty()) {
+                                            data = android.net.Uri.parse("tel:${query.replace(" ", "")}")
+                                        }
+                                        addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    }
+                                    startActivity(dialIntent)
+                                }
                                 "SMS"  -> HavenActionExecutor().executeDeviceAction(this@MainActivity, "text $query")
                                 "OPEN_FILES" -> HavenActionExecutor().executeDeviceAction(this@MainActivity, "open downloads")
                                 "OPEN_SETTINGS" -> HavenActionExecutor().executeDeviceAction(this@MainActivity, "open settings")
