@@ -108,6 +108,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
         memoryBar.text = "Memory active"
+        syncInstalledApps()
         statusText.text = "DexOS · ReasonFlow active · memory synced"
         val savedName = prefs.getString("user_name", null)
         if (savedName != null) {
@@ -399,7 +400,7 @@ class MainActivity : AppCompatActivity() {
             lower.contains("contact") -> Intent(Intent.ACTION_VIEW).apply {
                 type = "vnd.android.cursor.dir/contact"
             }
-            lower.contains("phone") || lower.contains("dialer") || lower.contains("call") ->
+            lower.contains("dialer") || (lower.contains("call") && !lower.contains("what can") && !lower.contains("can you") && !lower.contains("help")) ->
                 Intent(Intent.ACTION_DIAL)
             lower.contains("camera") -> Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE)
             lower.contains("browser") || lower.contains("chrome") ->
@@ -475,159 +476,6 @@ class MainActivity : AppCompatActivity() {
                 }
                 if (reprompt != null) say(reprompt)
             }
-            return true
-        }
-
-        if ((lower.startsWith("call") || lower.startsWith("dial") || lower.contains("please call") || lower.contains("can you call") || lower.contains("i need to call") || lower.contains("call my") || lower.contains("call her") || lower.contains("call him")) && !lower.contains("what can") && !lower.contains("recall") && !lower.contains("can you do")) {
-            val triggerWords = listOf("call", "dial")
-            var name = lower
-            for (trigger in triggerWords) {
-                if (lower.contains(trigger)) {
-                    name = lower.substringAfter(trigger).trim()
-                    break
-                }
-            }
-            for (filler in listOf("my ", "a ", "the ")) {
-                if (name.startsWith(filler)) name = name.removePrefix(filler).trim()
-            }
-            if (name.isNotBlank()) {
-                val rawNumber = extractPhoneNumber(name)
-                if (rawNumber != null) {
-                    say("Dialing $rawNumber now.")
-                    val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$rawNumber")).apply {
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    }
-                    try { startActivity(intent) } catch (e: Exception) {}
-                    return true
-                }
-                val matches = findMatchingContacts(name)
-                when {
-                    matches.size == 1 -> {
-                        val (cName, number) = matches[0]
-                        say("Calling $cName now.")
-                        val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$number")).apply {
-                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        }
-                        try { startActivity(intent) } catch (e: Exception) {}
-                        return true
-                    }
-                    matches.size > 1 -> {
-                        val names = matches.map { it.first }.distinct()
-                        workflowContactName = name
-                        pendingWorkflow = "CALL_CLARIFY"
-                        conversationMode = true
-                        say("I found a few: ${names.joinToString(", ")}. Which one?")
-                        return true
-                    }
-                    else -> {
-                        workflowContactName = name
-                        pendingWorkflow = "CALL_NOT_FOUND"
-                        conversationMode = true
-                        say("I don't see $name in your contacts. Do you want to try a different spelling, or say the number instead?")
-                        return true
-                    }
-                }
-            } else {
-                pendingWorkflow = "CALL_WHO"
-                conversationMode = true
-                say("Who would you like to call?")
-                return true
-            }
-        }
-
-        if (lower.contains("save") && (lower.contains("contact") || lower.contains("number"))) {
-            val phoneNumber = extractPhoneNumber(text)
-            val name = if (phoneNumber != null) extractContactName(lower, phoneNumber) else ""
-            when {
-                phoneNumber != null && name.isNotBlank() -> {
-                    workflowContactName = name
-                    workflowContactNumber = phoneNumber
-                    pendingWorkflow = "SAVE_CONFIRM"
-                    conversationMode = true
-                    say("Got it. Should I save $name at $phoneNumber?")
-                }
-                phoneNumber != null -> {
-                    workflowContactNumber = phoneNumber
-                    pendingWorkflow = "SAVE_NAME"
-                    conversationMode = true
-                    say("I have the number $phoneNumber. What name should I save it under?")
-                }
-                name.isNotBlank() -> {
-                    workflowContactName = name
-                    pendingWorkflow = "SAVE_NUMBER"
-                    conversationMode = true
-                    say("What's $name's phone number?")
-                }
-                else -> {
-                    pendingWorkflow = "SAVE_NAME"
-                    conversationMode = true
-                    say("Sure. What's the name for this contact?")
-                }
-            }
-            return true
-        }
-
-        if (lower.contains("text") || lower.contains("send a message") || lower.contains("send message")) {
-            val triggerWords = listOf("send a message to", "send message to", "text", "message")
-            var name = lower
-            for (trigger in triggerWords) {
-                if (lower.contains(trigger)) {
-                    name = lower.substringAfter(trigger).trim()
-                    break
-                }
-            }
-            for (filler in listOf("my ", "a ", "the ", "to ")) {
-                if (name.startsWith(filler)) name = name.removePrefix(filler).trim()
-            }
-            if (name.isNotBlank()) {
-                workflowContactName = name
-                pendingWorkflow = "SMS_MSG"
-                conversationMode = true
-                say("What would you like to say to $name?")
-            } else {
-                pendingWorkflow = "SMS_WHO"
-                conversationMode = true
-                say("Who would you like to text?")
-            }
-            return true
-        }
-
-        if (lower.contains("set an alarm") || lower.contains("wake me") || lower.contains("alarm for") || lower.contains("remind me")) {
-            pendingWorkflow = "ALARM"
-            conversationMode = true
-            say("What time should I set the alarm for?")
-            return true
-        }
-
-        if (lower.contains("open") || lower.contains("launch") || lower.contains("go to")) {
-            val triggerWords = listOf("go to", "open", "launch")
-            var appQuery = lower
-            for (trigger in triggerWords) {
-                if (lower.contains(trigger)) {
-                    appQuery = lower.substringAfter(trigger).trim()
-                    break
-                }
-            }
-            if (appQuery.isNotEmpty()) {
-                val found = openAppByLabel(appQuery)
-                if (found) {
-                    say("Opening $appQuery.")
-                    return true
-                }
-                // Not found locally — fall through to backend
-                return false
-            }
-        }
-
-        if (lower.contains("go home") || lower.contains("home screen")) {
-            HavenAccessibilityService.performHome()
-            say("Going home.")
-            return true
-        }
-
-        if (lower.contains("go back")) {
-            HavenAccessibilityService.performBack()
-            say("Going back.")
             return true
         }
 
@@ -865,6 +713,37 @@ class MainActivity : AppCompatActivity() {
     }
 
 
+    private fun syncInstalledApps() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val pm = packageManager
+                val apps = pm.getInstalledApplications(android.content.pm.PackageManager.GET_META_DATA)
+                val appList = org.json.JSONArray()
+                for (app in apps) {
+                    val launchIntent = pm.getLaunchIntentForPackage(app.packageName)
+                    if (launchIntent != null) {
+                        val label = pm.getApplicationLabel(app).toString()
+                        val obj = org.json.JSONObject()
+                            .put("package", app.packageName)
+                            .put("label", label)
+                        appList.put(obj)
+                    }
+                }
+                val body = org.json.JSONObject()
+                    .put("user_id", userId)
+                    .put("apps", appList)
+                    .toString()
+                val request = okhttp3.Request.Builder()
+                    .url("https://dex-backend-production-2bbe.up.railway.app/haven_apps")
+                    .post(body.toRequestBody("application/json".toMediaType()))
+                    .build()
+                client.newCall(request).execute()
+            } catch (e: Exception) {
+                android.util.Log.e("Haven", "App sync failed: ${e.message}")
+            }
+        }
+    }
+
     private fun sendToHaven(userMessage: String) {
         havenCore.handle(
             input = userMessage,
@@ -878,9 +757,16 @@ class MainActivity : AppCompatActivity() {
                 isWaitingForResponse = true
                 statusText.text = "Haven is thinking..."
                 conversationHistory.add(JSONObject().put("role", "user").put("content", fallback))
+                val voiceContext = JSONObject()
+                    .put("message_length", fallback.length)
+                    .put("word_count", fallback.trim().split("\\s+".toRegex()).size)
+                    .put("is_short", fallback.length < 20)
+                    .put("is_question", fallback.trimEnd().endsWith("?"))
+
                 val body = JSONObject()
                     .put("messages", JSONArray(conversationHistory.toString()))
                     .put("user_id", userId)
+                    .put("voice_context", voiceContext)
                     .toString()
                 val request = Request.Builder()
                     .url(RAILWAY_URL)

@@ -83,65 +83,10 @@ class HavenCapabilityLayer(private val context: Context) {
     fun process(userText: String): HavenAction? {
         val t = userText.lowercase().trim()
 
-        // EMERGENCY — always first, always local
+        // EMERGENCY ONLY — everything else goes to Talnir via backend
         if (isEmergency(t)) return handleEmergency(t)
 
-        // CALL
-        if (isCall(t)) return handleCall(t)
-
-        // SMS
-        if (isSms(t)) return handleSms(t, userText)
-
-        // Play Store / App Store
-        if (isPlayStore(t)) return openApp("com.android.vending", "Opening Google Play for you.")
-
-        // Camera
-        if (isCamera(t)) return openApp("com.android.camera2", "Opening your camera.")
-
-        // Open or install specific app
-        val appPackage = detectAppPackage(t)
-        if (appPackage != null) {
-            return if (isInstall(t)) {
-                installApp(appPackage, t)
-            } else {
-                openApp(appPackage, "Opening that for you right now.")
-            }
-        }
-
-        // Generic open/install with no known package — let backend handle with search
-        if (isInstall(t)) {
-            return openApp("com.android.vending",
-                "Let me open the Play Store so you can find that.")
-        }
-
-        // Volume
-        if (isVolume(t)) return handleVolume(t)
-
-        // Flashlight
-        if (t.contains("flashlight") || t.contains("torch")) return handleFlashlight(t)
-
-        // Alarm
-        if (isAlarm(t)) return openApp("com.google.android.deskclock",
-            "Opening your clock so we can set that alarm.")
-
-        // Settings
-        if (t.contains("setting") || t.contains("wifi") || t.contains("wi-fi") ||
-            t.contains("bluetooth")) return handleSettings(t)
-
-        // Text size
-        if (isTextSize(t)) return handleTextSize()
-
-        // Maps / Navigation
-        if (isMaps(t)) return handleMaps(t, userText)
-
-        // Read messages — open messages app
-        if (isReadMessages(t)) return openApp("com.google.android.apps.messaging",
-            "Opening your messages for you.")
-
-        // Save contact
-        if (isSaveContact(t)) return handleSaveContact(t, userText)
-
-        // Not a local capability — let the backend handle it
+        // Not a local capability — let Talnir and backend handle it
         return null
     }
 
@@ -156,7 +101,7 @@ class HavenCapabilityLayer(private val context: Context) {
         t.contains("i am hurt") || t.contains("call for help")
 
     private fun isCall(t: String) =
-        (t.contains("call") || t.contains("phone") || t.contains("dial") || t.contains("ring")) &&
+        (t.contains("call") || t.contains("dial") || t.contains("ring")) &&
         !t.contains("911")
 
     private fun isSms(t: String) =
