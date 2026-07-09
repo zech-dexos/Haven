@@ -915,7 +915,7 @@ class MainActivity : AppCompatActivity() {
             try {
                 val response = client.newCall(request).execute()
                 val audioBytes = response.body?.bytes()
-                if (audioBytes == null || audioBytes.size < 1000) {
+                if (audioBytes == null || audioBytes.size < 100) {
                     withContext(Dispatchers.Main) { playNextChunk() }
                     return@launch
                 }
