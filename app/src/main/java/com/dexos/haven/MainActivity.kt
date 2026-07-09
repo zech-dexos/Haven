@@ -109,6 +109,7 @@ class MainActivity : AppCompatActivity() {
         }
         memoryBar.text = "Memory active"
         syncInstalledApps()
+        loadUserMemory()
         statusText.text = "DexOS · ReasonFlow active · memory synced"
         val savedName = prefs.getString("user_name", null)
         if (savedName != null) {
@@ -712,6 +713,30 @@ class MainActivity : AppCompatActivity() {
         return false
     }
 
+
+    private fun loadUserMemory() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val request = okhttp3.Request.Builder()
+                    .url("https://dex-backend-production-2bbe.up.railway.app/haven_profile?user_id=$userId")
+                    .get()
+                    .build()
+                val response = client.newCall(request).execute()
+                val json = org.json.JSONObject(response.body?.string() ?: "{}")
+                val name = json.optString("name", "")
+                if (name.isNotEmpty()) {
+                    withContext(Dispatchers.Main) {
+                        prefs.edit().putString("user_name", name).apply()
+                        val greeting = "Well hello again, $name! It's so good to have you back, honey."
+                        addBubble(greeting, isUser = false)
+                        speakWithGTTS(greeting)
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("Haven", "Memory load failed: ${e.message}")
+            }
+        }
+    }
 
     private fun syncInstalledApps() {
         CoroutineScope(Dispatchers.IO).launch {
