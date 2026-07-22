@@ -110,6 +110,7 @@ class MainActivity : AppCompatActivity() {
         memoryBar.text = "Memory active"
         syncInstalledApps()
         loadUserMemory()
+        restoreConversationHistory()
         statusText.text = "DexOS · ReasonFlow active · memory synced"
         val savedName = prefs.getString("user_name", null)
         if (savedName != null) {
@@ -217,8 +218,8 @@ class MainActivity : AppCompatActivity() {
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
-            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 2000L)
-            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 2000L)
+            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 4000L)
+            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 4000L)
             putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 1500L)
         }
         micButton.text = "Listening..."
@@ -714,6 +715,25 @@ class MainActivity : AppCompatActivity() {
     }
 
 
+
+    private fun saveConversationHistory() {
+        val arr = JSONArray()
+        for (msg in conversationHistory) arr.put(msg)
+        prefs.edit().putString("conversation_history", arr.toString()).apply()
+    }
+
+    private fun restoreConversationHistory() {
+        val saved = prefs.getString("conversation_history", null) ?: return
+        try {
+            val arr = JSONArray(saved)
+            for (i in 0 until arr.length()) {
+                conversationHistory.add(arr.getJSONObject(i))
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("Haven", "Failed to restore history: ${e.message}")
+        }
+    }
+
     private fun loadUserMemory() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -963,6 +983,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun onSpeakDone() {
         isSpeaking = false
+        saveConversationHistory()
         statusText.text = "DexOS · ReasonFlow active · memory synced"
         if (conversationMode) {
             micButton.text = "Listening..."
