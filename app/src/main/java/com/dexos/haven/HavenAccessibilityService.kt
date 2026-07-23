@@ -19,6 +19,9 @@ class HavenAccessibilityService : AccessibilityService() {
         
         fun extractText(node: AccessibilityNodeInfo?): String {
             if (node == null) return ""
+            // Never read password fields -- critical for elderly users especially,
+            // who may have banking/account apps open with saved credentials visible.
+            if (node.isPassword) return ""
             val sb = StringBuilder()
             if (node.text != null) sb.append(node.text).append(" ")
             if (node.contentDescription != null) sb.append(node.contentDescription).append(" ")
@@ -27,6 +30,11 @@ class HavenAccessibilityService : AccessibilityService() {
             }
             return sb.toString().trim()
         }
+
+        // Current screen's app package + visible text, updated live as the screen changes.
+        // Kalimi's conversation loop reads this alongside whatever the user just said.
+        @Volatile var currentScreenPackage: String = ""
+        @Volatile var currentScreenText: String = ""
         
         fun openApp(packageName: String): Boolean {
             val ctx = instance ?: return false
@@ -92,7 +100,20 @@ class HavenAccessibilityService : AccessibilityService() {
         instance = this
     }
 
-    override fun onAccessibilityEvent(event: AccessibilityEvent?) {}
+    override fun onAccessibilityEvent(event: AccessibilityEvent?) {
+        if (event == null) return
+        val relevant = event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED ||
+                event.eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED
+        if (!relevant) return
+
+        // Don't bother re-reading Haven's own screen -- only care about OTHER apps
+        val pkg = event.packageName?.toString() ?: return
+        if (pkg == packageName) return
+
+        val root = rootInActiveWindow ?: return
+        currentScreenPackage = pkg
+        currentScreenText = extractText(root).take(2000) // cap length, screens can be huge
+    }
 
     override fun onInterrupt() {
         instance = null

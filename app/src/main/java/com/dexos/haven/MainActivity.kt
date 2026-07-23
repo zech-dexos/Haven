@@ -67,6 +67,7 @@ class MainActivity : AppCompatActivity() {
     private var pendingSaveContactName: String? = null
     private var pendingSaveContactNumber: String? = null
     private var conversationMode: Boolean = false
+    private var appInForeground: Boolean = false
     private var pendingWorkflow: String? = null
     private var workflowContactName: String? = null
     private var workflowContactNumber: String? = null
@@ -109,6 +110,7 @@ class MainActivity : AppCompatActivity() {
         }
         memoryBar.text = "Memory active"
         syncInstalledApps()
+        startHavenServices()
         loadUserMemory()
         restoreConversationHistory()
         statusText.text = "DexOS · ReasonFlow active · memory synced"
@@ -154,15 +156,18 @@ class MainActivity : AppCompatActivity() {
     private fun setupSpeechRecognizer() {
         speechRecognizer.setRecognitionListener(object : RecognitionListener {
             override fun onResults(results: Bundle?) {
+                HavenState.isListening = false
                 val matches: ArrayList<String>? = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                 val text = matches?.firstOrNull() ?: run {
                     micButton.text = "Speak to Haven"
                     micButton.isEnabled = true
+                    if (appInForeground) startListening()
                     return
                 }
                 if (text.length < 3) {
                     micButton.text = "Speak to Haven"
                     micButton.isEnabled = true
+                    if (appInForeground) startListening()
                     return
                 }
                 addBubble(text, isUser = true)
@@ -185,9 +190,13 @@ class MainActivity : AppCompatActivity() {
             }
             override fun onEndOfSpeech() {}
             override fun onError(error: Int) {
+                HavenState.isListening = false
                 micButton.text = "Speak to Haven"
                 micButton.isEnabled = true
                 statusText.text = "DexOS · ReasonFlow active · memory synced"
+                if (appInForeground && !HavenState.isSpeaking) {
+                    Handler(Looper.getMainLooper()).postDelayed({ startListening() }, 800)
+                }
             }
             override fun onReadyForSpeech(params: Bundle?) { statusText.text = "Listening..." }
             override fun onBeginningOfSpeech() { statusText.text = "Hearing you..." }
@@ -207,6 +216,8 @@ class MainActivity : AppCompatActivity() {
             return
         }
         if (isWaitingForResponse) return
+        if (HavenState.isListening) return
+        HavenState.isListening = true
         if (isSpeaking) {
             // Barge-in: stop current speech immediately, drop queued sentences, start listening
             speechQueue.clear()
@@ -241,6 +252,8 @@ class MainActivity : AppCompatActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == RECORD_AUDIO_REQUEST_CODE) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                val listenIntent = Intent(this, HavenListeningService::class.java)
+                startForegroundService(listenIntent)
                 startListening()
             } else {
                 addBubble("Haven needs microphone access to hear you. Please enable it in phone settings.", isUser = false)
@@ -808,10 +821,15 @@ class MainActivity : AppCompatActivity() {
                     .put("is_short", fallback.length < 20)
                     .put("is_question", fallback.trimEnd().endsWith("?"))
 
+                val screenContext = JSONObject()
+                    .put("current_app", HavenAccessibilityService.currentScreenPackage)
+                    .put("screen_text", HavenAccessibilityService.currentScreenText)
+
                 val body = JSONObject()
                     .put("messages", JSONArray(conversationHistory.toString()))
                     .put("user_id", userId)
                     .put("voice_context", voiceContext)
+                    .put("screen_context", screenContext)
                     .toString()
                 val request = Request.Builder()
                     .url(RAILWAY_URL)
@@ -916,6 +934,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun speakWithGTTS(text: String) {
         isSpeaking = true
+        HavenState.isSpeaking = true
         speechQueue = splitIntoChunks(text)
         playNextChunk()
     }
@@ -983,9 +1002,14 @@ class MainActivity : AppCompatActivity() {
 
     private fun onSpeakDone() {
         isSpeaking = false
+        HavenState.isSpeaking = false
         saveConversationHistory()
         statusText.text = "DexOS · ReasonFlow active · memory synced"
-        if (conversationMode) {
+        if (appInForeground) {
+            micButton.text = "Listening..."
+            micButton.isEnabled = true
+            startListening()
+        } else if (conversationMode) {
             micButton.text = "Listening..."
             micButton.isEnabled = true
             startListening()
@@ -993,6 +1017,47 @@ class MainActivity : AppCompatActivity() {
             micButton.text = "Speak to Haven"
             micButton.isEnabled = true
         }
+    }
+
+
+    private fun startHavenServices() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+            == PackageManager.PERMISSION_GRANTED) {
+            val listenIntent = Intent(this, HavenListeningService::class.java)
+            startForegroundService(listenIntent)
+        } else {
+            ActivityCompat.requestPermissions(
+                this, arrayOf(Manifest.permission.RECORD_AUDIO), RECORD_AUDIO_REQUEST_CODE
+            )
+        }
+
+        if (android.provider.Settings.canDrawOverlays(this)) {
+            val floatIntent = Intent(this, FloatingHavenService::class.java)
+            startService(floatIntent)
+        } else {
+            val overlayIntent = Intent(
+                android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                android.net.Uri.parse("package:$packageName")
+            )
+            startActivity(overlayIntent)
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        appInForeground = true
+        if (android.provider.Settings.canDrawOverlays(this)) {
+            val floatIntent = Intent(this, FloatingHavenService::class.java)
+            startService(floatIntent)
+        }
+        if (!HavenState.isBusy()) {
+            startListening()
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        appInForeground = false
     }
 
     override fun onDestroy() {
