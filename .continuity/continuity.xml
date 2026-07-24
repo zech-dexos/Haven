@@ -1,15 +1,15 @@
 <continuity version="0.3" purpose="handoff">
   <fingerprint>
     <brain_revision>60</brain_revision>
-    <repo_commit>2e68c2e</repo_commit>
-    <generated>2026-07-03 12:25 UTC</generated>
+    <repo_commit>47cc7e8</repo_commit>
+    <generated>2026-07-24 04:28 UTC</generated>
     <purpose>handoff</purpose>
   </fingerprint>
   <project>
     <name>Haven</name>
     <github_repo>zech-dexos/Haven</github_repo>
   </project>
-  <ai_briefing to="receiving AI">You are receiving a Continuity handoff. Read this entire file before responding. Last session summary: 0 records extracted. Current task: Vertex AI Cloud Run deployment — XPRIZE requirement A. Why: Judges require Gemini via Vertex AI, not OpenRouter. Must deploy to Cloud Run.. There are 1 open question(s) that need resolution. Read the operator_manual section — it tells you exactly how to work with this human.</ai_briefing>
+  <ai_briefing to="receiving AI">You are receiving a Continuity handoff. Read this entire file before responding. Current task: Vertex AI Cloud Run deployment — XPRIZE requirement A. Why: Judges require Gemini via Vertex AI, not OpenRouter. Must deploy to Cloud Run.. There are 1 open question(s) that need resolution. Read the operator_manual section — it tells you exactly how to work with this human.</ai_briefing>
   <operator_manual note="Read before writing any code or making any suggestions.">
     <primary_model>claude</primary_model>
     <patching>Full files only. Use cat &lt;&lt;'EOF' heredoc. Never partial snippets.</patching>
@@ -79,16 +79,21 @@ summary: completed Firestore telemetry (req C), Dex live memory per-turn, Haven 
   </open_questions>
   <git_state>
     <branch>main</branch>
-    <commit>2e68c2e</commit>
+    <commit>47cc7e8</commit>
+    <modified_files>
+      <file>M app/src/main/java/com/dexos/haven/FloatingHavenService.kt</file>
+      <file>M app/src/main/java/com/dexos/haven/HavenCapabilityLayer.kt</file>
+    </modified_files>
     <recent_commits>
-      <commit>2e68c2e feat: HavenCore orchestration spine + device action from backend</commit>
-      <commit>8838c4e continuity: update context package</commit>
-      <commit>e0009df Added &lt;queries&gt; block to AndroidManifest.xml to resolve manifest merger error and enable package visibility</commit>
-      <commit>2bc6ee3 continuity: update context package</commit>
-      <commit>aa77c17 continuity: update context package</commit>
+      <commit>47cc7e8 feat: high-contrast outdoor mode toggle, larger text throughout</commit>
+      <commit>2a4fb72 feat: continuous in-app listening, shared busy-state coordination, screen-awareness capture</commit>
+      <commit>e8d6d7b fix: persist conversation history across app restarts</commit>
+      <commit>cb49d23 feat: memory load on startup, TTS threshold fix, app manifest scanner</commit>
+      <commit>5769738 feat: load user memory on startup, Kalimi greets by name</commit>
     </recent_commits>
   </git_state>
   <session_history>
+    <session model="claude" when=""/>
     <session model="claude" when="2026-07-02T08:18">0 records extracted</session>
     <session model="claude" when="2026-07-01T22:41">0 records extracted</session>
     <session model="claude" when="2026-06-27T08:43" switched_because="end of session">built and deployed full voice biometrics layer — speaker ID + health/emotional signal analytics. APK installed on device. commit 2433018. XPRIZE requirements B and D substantially complete, A and C remain open.</session>
