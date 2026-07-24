@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="#0a0a0f">
 
     <LinearLayout
+        android:id="@+id/headerLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
@@ -17,16 +19,31 @@
         android:gravity="center_vertical">
 
         <TextView
+            android:id="@+id/titleText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Haven"
-            android:textSize="16sp"
+            android:textSize="18sp"
             android:textColor="#e8e8f0"/>
 
         <View
             android:layout_width="0dp"
             android:layout_height="1dp"
             android:layout_weight="1"/>
+
+        <Button
+            android:id="@+id/displayModeButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="☀ Outdoor Mode"
+            android:textSize="13sp"
+            android:textColor="#9FE1CB"
+            android:background="#0f1020"
+            android:paddingLeft="12dp"
+            android:paddingRight="12dp"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+            android:layout_marginRight="12dp"/>
 
         <TextView
             android:layout_width="8dp"
@@ -37,11 +54,13 @@
     </LinearLayout>
 
     <View
+        android:id="@+id/dividerTop"
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="#1a1a2e"/>
 
     <LinearLayout
+        android:id="@+id/memoryBarContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
@@ -60,7 +79,7 @@
             android:layout_height="wrap_content"
             android:text="Memory active"
             android:textColor="#888888"
-            android:textSize="12sp"/>
+            android:textSize="14sp"/>
 
     </LinearLayout>
 
@@ -83,6 +102,7 @@
     </ScrollView>
 
     <View
+        android:id="@+id/dividerBottom"
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="#1a1a2e"/>
@@ -93,13 +113,14 @@
         android:layout_height="wrap_content"
         android:text="DexOS · ReasonFlow active · memory synced"
         android:textColor="#444444"
-        android:textSize="11sp"
+        android:textSize="12sp"
         android:paddingLeft="20dp"
         android:paddingRight="20dp"
         android:paddingTop="8dp"
         android:paddingBottom="8dp"/>
 
     <LinearLayout
+        android:id="@+id/inputRow"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
@@ -115,34 +136,34 @@
             android:layout_weight="1"
             android:hint="Type to Haven..."
             android:textColor="#e8e8f0"
-            android:textColorHint="#444444"
+            android:textColorHint="#666666"
             android:background="#0f1020"
-            android:paddingLeft="12dp"
-            android:paddingRight="12dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
-            android:textSize="14sp"
+            android:paddingLeft="14dp"
+            android:paddingRight="14dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="12dp"
+            android:textSize="17sp"
             android:inputType="text"/>
 
         <Button
             android:id="@+id/sendButton"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:text="→"
             android:textColor="#9FE1CB"
             android:background="#0f1020"
             android:layout_marginLeft="8dp"
-            android:textSize="18sp"/>
+            android:textSize="20sp"/>
 
     </LinearLayout>
 
     <Button
         android:id="@+id/micButton"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
+        android:layout_height="64dp"
         android:text="Speak to Haven"
         android:textColor="#E1F5EE"
-        android:textSize="15sp"
+        android:textSize="18sp"
         android:background="#0f6e56"
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
@@ -160,33 +181,33 @@
         <Button
             android:id="@+id/cameraButton"
             android:layout_width="0dp"
-            android:layout_height="48dp"
+            android:layout_height="52dp"
             android:layout_weight="1"
             android:text="Read Doc"
             android:textColor="#5DCAA5"
-            android:textSize="11sp"
+            android:textSize="13sp"
             android:background="#0a0a14"
             android:layout_marginRight="6dp"/>
 
         <Button
             android:id="@+id/emergencyButton"
             android:layout_width="0dp"
-            android:layout_height="48dp"
+            android:layout_height="52dp"
             android:layout_weight="1"
             android:text="Emergency"
             android:textColor="#F0997B"
-            android:textSize="11sp"
+            android:textSize="13sp"
             android:background="#0a0a14"
             android:layout_marginRight="6dp"/>
 
         <Button
             android:id="@+id/familyButton"
             android:layout_width="0dp"
-            android:layout_height="48dp"
+            android:layout_height="52dp"
             android:layout_weight="1"
             android:text="Family"
             android:textColor="#5DCAA5"
-            android:textSize="11sp"
+            android:textSize="13sp"
             android:background="#0a0a14"/>
 
     </LinearLayout>

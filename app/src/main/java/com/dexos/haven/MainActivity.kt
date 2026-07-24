@@ -108,6 +108,10 @@ class MainActivity : AppCompatActivity() {
                 if (!handled) sendToHaven(text)
             }
         }
+        findViewById<Button>(R.id.displayModeButton).setOnClickListener {
+            applyDisplayMode(!isHighContrast())
+        }
+        applyDisplayMode(isHighContrast())
         memoryBar.text = "Memory active"
         syncInstalledApps()
         startHavenServices()
@@ -127,14 +131,8 @@ class MainActivity : AppCompatActivity() {
     private fun addBubble(text: String, isUser: Boolean) {
         val bubble = TextView(this)
         bubble.text = text
-        bubble.textSize = 13f
-        bubble.setTextColor(if (isUser) Color.parseColor("#9FB8CC") else Color.parseColor("#9FE1CB"))
         bubble.setPadding(28, 20, 28, 20)
-        val bg = GradientDrawable()
-        bg.cornerRadius = 28f
-        bg.setColor(if (isUser) Color.parseColor("#0f1a28") else Color.parseColor("#0a1a14"))
-        bg.setStroke(1, if (isUser) Color.parseColor("#1a3040") else Color.parseColor("#0f3d2a"))
-        bubble.background = bg
+        styleBubble(bubble, isUser, isHighContrast())
         val params = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.WRAP_CONTENT,
             LinearLayout.LayoutParams.WRAP_CONTENT
@@ -151,6 +149,53 @@ class MainActivity : AppCompatActivity() {
         bubble.layoutParams = params
         chatContainer.addView(bubble)
         scrollView.post { scrollView.fullScroll(ScrollView.FOCUS_DOWN) }
+    }
+
+    private fun isHighContrast(): Boolean = prefs.getBoolean("high_contrast_mode", false)
+
+    private fun applyDisplayMode(highContrast: Boolean) {
+        prefs.edit().putBoolean("high_contrast_mode", highContrast).apply()
+
+        val bg = if (highContrast) Color.parseColor("#FFFDF7") else Color.parseColor("#0a0a0f")
+        val panelBg = if (highContrast) Color.parseColor("#F0EDE0") else Color.parseColor("#0f1020")
+        val textColor = if (highContrast) Color.parseColor("#111111") else Color.parseColor("#e8e8f0")
+        val dimText = if (highContrast) Color.parseColor("#444444") else Color.parseColor("#888888")
+        val micBg = if (highContrast) Color.parseColor("#0a5c46") else Color.parseColor("#0f6e56")
+        val toggleText = if (highContrast) "🌙 Normal Mode" else "☀ Outdoor Mode"
+
+        findViewById<LinearLayout>(R.id.rootLayout).setBackgroundColor(bg)
+        findViewById<LinearLayout>(R.id.headerLayout).setBackgroundColor(bg)
+        findViewById<TextView>(R.id.titleText).setTextColor(textColor)
+        findViewById<Button>(R.id.displayModeButton).text = toggleText
+        findViewById<LinearLayout>(R.id.memoryBarContainer).setBackgroundColor(panelBg)
+        findViewById<TextView>(R.id.memoryBar).setTextColor(dimText)
+        findViewById<TextView>(R.id.statusText).setTextColor(dimText)
+        findViewById<EditText>(R.id.textInput).apply {
+            setTextColor(textColor)
+            setBackgroundColor(panelBg)
+        }
+        findViewById<Button>(R.id.micButton).setBackgroundColor(micBg)
+
+        // Re-render existing chat bubbles in the new color scheme
+        for (i in 0 until chatContainer.childCount) {
+            val bubble = chatContainer.getChildAt(i) as? TextView ?: continue
+            val isUserBubble = bubble.textAlignment == android.view.View.TEXT_ALIGNMENT_TEXT_END ||
+                (bubble.layoutParams as? LinearLayout.LayoutParams)?.gravity == Gravity.END
+            styleBubble(bubble, isUserBubble, highContrast)
+        }
+    }
+
+    private fun styleBubble(bubble: TextView, isUser: Boolean, highContrast: Boolean) {
+        bubble.textSize = 16f
+        val userText = if (highContrast) "#0a3550" else "#9FB8CC"
+        val havenText = if (highContrast) "#0a4a35" else "#9FE1CB"
+        val userBg = if (highContrast) "#E3EEF5" else "#0f1a28"
+        val havenBg = if (highContrast) "#E1F3EA" else "#0a1a14"
+        bubble.setTextColor(Color.parseColor(if (isUser) userText else havenText))
+        val bg = GradientDrawable()
+        bg.cornerRadius = 28f
+        bg.setColor(Color.parseColor(if (isUser) userBg else havenBg))
+        bubble.background = bg
     }
 
     private fun setupSpeechRecognizer() {
