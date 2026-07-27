@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
+import android.media.audiofx.NoiseSuppressor
 import androidx.core.content.ContextCompat
 
 class AudioCaptureManager(private val context: Context) {
@@ -20,6 +21,7 @@ class AudioCaptureManager(private val context: Context) {
 
     private var audioRecord: AudioRecord? = null
     private var isCapturing = false
+    private var noiseSuppressor: NoiseSuppressor? = null
     private val capturedBuffer = mutableListOf<Short>()
     private var captureStartMs = 0L
 
@@ -39,6 +41,17 @@ class AudioCaptureManager(private val context: Context) {
             AUDIO_FORMAT,
             bufferSize
         )
+        // Attach platform noise suppression if this device supports it.
+        // Not as specialized as RNNoise, but real, hardware-accelerated,
+        // and requires no native/JNI build -- safe to ship without a test device.
+        if (NoiseSuppressor.isAvailable()) {
+            try {
+                noiseSuppressor = NoiseSuppressor.create(audioRecord!!.audioSessionId)
+                noiseSuppressor?.enabled = true
+            } catch (e: Exception) {
+                noiseSuppressor = null
+            }
+        }
 
         capturedBuffer.clear()
         captureStartMs = System.currentTimeMillis()
@@ -66,6 +79,8 @@ class AudioCaptureManager(private val context: Context) {
     // Returns PCM, extracts features, caller must discard PCM after use
     fun stopAndGetPcm(): ShortArray {
         isCapturing = false
+        noiseSuppressor?.release()
+        noiseSuppressor = null
         audioRecord?.stop()
         audioRecord?.release()
         audioRecord = null
