@@ -41,7 +41,9 @@ No account required. Works on any Android phone.
 - **Backend** — FastAPI on Railway
 - **Memory** — Persistent per-user JSON memory via REST API
 - **Voice output** — gTTS via Railway endpoint
-- **AI** — OpenRouter LLM backend
+- **AI** — Gemini 2.5 Flash (conversation) + Groq/Llama (fast intent classification via Talnir)
+- **Telemetry** — Firestore live telemetry
+- **Payments** — Stripe
 
 ---
 
@@ -51,7 +53,7 @@ User voice → SpeechRecognizer → local command handler
                                       ↓ (if not local)
                               Railway FastAPI backend
                                       ↓
-                              OpenRouter LLM + memory
+                              Gemini + Talnir routing + memory
                                       ↓
                               gTTS voice response
 
