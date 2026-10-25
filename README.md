@@ -74,6 +74,29 @@ User voice → SpeechRecognizer → local command handler
 
 ---
 
+## Building from Source
+
+To compile Haven locally, ensure you have Android SDK and JDK installed, then run:
+
+```bash
+./gradlew assembleDebug
+```
+
+The compiled APK will be output to `app/build/outputs/apk/debug/`.
+
+---
+
+## Manual Smoke Test
+
+Before releasing a pilot, verify these core flows on a physical device or emulator:
+1. **Emergency Handling**: Tap speak and say "call 911". Verify the app confirms your intent and opens the dialer (does not auto-dial without permission).
+2. **App Intents**: Say "open downloads" or "open google play" and ensure the correct OS intent opens.
+3. **Screen Privacy**: Check that the "Screen: OFF" button prevents screen text from being sent in the backend payload. Tap to toggle to "Screen: ON" to enable screen awareness.
+4. **History Erasure**: Tap the "Clear" button and confirm past messages vanish from the UI and aren't sent in the next conversation turn.
+5. **Offline Mode**: Turn off device Wi-Fi/Data and attempt to send a message. Verify Haven gracefully speaks an offline error rather than silently hanging.
+
+---
+
 ## Built By
 
 Zechariah Cozine — solo developer, Northern California.

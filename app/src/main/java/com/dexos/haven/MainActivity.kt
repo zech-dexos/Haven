@@ -39,6 +39,11 @@ import android.net.Uri
 import java.io.File
 import java.io.FileOutputStream
 
+object NetworkConfig {
+    const val RAILWAY_URL = "https://dex-backend-production-2bbe.up.railway.app/haven_api"
+    const val TTS_URL = "https://dex-backend-production-2bbe.up.railway.app/haven_tts_free"
+}
+
 class MainActivity : AppCompatActivity() {
 
     private lateinit var speechRecognizer: SpeechRecognizer
@@ -50,9 +55,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var chatContainer: LinearLayout
     private lateinit var scrollView: ScrollView
     private lateinit var prefs: SharedPreferences
-    private val client = OkHttpClient()
-    private val RAILWAY_URL = "https://dex-backend-production-2bbe.up.railway.app/haven_api"
-    private val TTS_URL = "https://dex-backend-production-2bbe.up.railway.app/haven_tts_free"
+    private val client = OkHttpClient.Builder()
+        .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+        .readTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+        .build()
     private val conversationHistory = mutableListOf<JSONObject>()
     private val havenCore: HavenCore by lazy { HavenCore(this, HavenCapabilityLayer(this), HavenActionExecutor()) }
     private var isSpeaking = false
@@ -69,6 +75,7 @@ class MainActivity : AppCompatActivity() {
     private var conversationMode: Boolean = false
     private var appInForeground: Boolean = false
     private var pendingWorkflow: String? = null
+    private var isScreenAwarenessEnabled: Boolean = false
     private var workflowContactName: String? = null
     private var workflowContactNumber: String? = null
     private var workflowSmsMessage: String? = null
@@ -87,6 +94,7 @@ class MainActivity : AppCompatActivity() {
         chatContainer = findViewById(R.id.chatContainer)
         scrollView = findViewById(R.id.scrollView)
         prefs = getSharedPreferences("haven_prefs", MODE_PRIVATE)
+        isScreenAwarenessEnabled = prefs.getBoolean("screen_awareness_enabled", false)
         audioCaptureManager = AudioCaptureManager(this)
         speakerIdentifier = SpeakerIdentifier(this)
         audioCaptureManager = AudioCaptureManager(this)
@@ -98,6 +106,7 @@ class MainActivity : AppCompatActivity() {
         }
         speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
         setupSpeechRecognizer()
+        setupPrivacyButtons()
         micButton.setOnClickListener { startListening() }
         sendButton.setOnClickListener {
             val text = textInput.text.toString().trim()
@@ -250,6 +259,29 @@ class MainActivity : AppCompatActivity() {
             override fun onPartialResults(partialResults: Bundle?) {}
             override fun onEvent(eventType: Int, params: Bundle?) {}
         })
+    }
+
+    private fun setupPrivacyButtons() {
+        val screenAwarenessButton = findViewById<Button>(R.id.screenAwarenessButton)
+        screenAwarenessButton.text = if (isScreenAwarenessEnabled) "👁 Screen: ON" else "👁 Screen: OFF"
+        screenAwarenessButton.setOnClickListener {
+            isScreenAwarenessEnabled = !isScreenAwarenessEnabled
+            prefs.edit().putBoolean("screen_awareness_enabled", isScreenAwarenessEnabled).apply()
+            screenAwarenessButton.text = if (isScreenAwarenessEnabled) "👁 Screen: ON" else "👁 Screen: OFF"
+            if (isScreenAwarenessEnabled) {
+                statusText.text = "Screen context enabled. Haven can now see what's on your screen."
+            } else {
+                statusText.text = "Screen context disabled."
+            }
+        }
+
+        val clearHistoryButton = findViewById<Button>(R.id.clearHistoryButton)
+        clearHistoryButton.setOnClickListener {
+            conversationHistory.clear()
+            saveConversationHistory()
+            chatContainer.removeAllViews()
+            statusText.text = "Conversation history cleared."
+        }
     }
 
     private fun startListening() {
@@ -775,6 +807,10 @@ class MainActivity : AppCompatActivity() {
 
 
     private fun saveConversationHistory() {
+        val maxHistorySize = 50
+        while (conversationHistory.size > maxHistorySize) {
+            conversationHistory.removeAt(0)
+        }
         val arr = JSONArray()
         for (msg in conversationHistory) arr.put(msg)
         prefs.edit().putString("conversation_history", arr.toString()).apply()
@@ -867,8 +903,11 @@ class MainActivity : AppCompatActivity() {
                     .put("is_question", fallback.trimEnd().endsWith("?"))
 
                 val screenContext = JSONObject()
-                    .put("current_app", HavenAccessibilityService.currentScreenPackage)
-                    .put("screen_text", HavenAccessibilityService.currentScreenText)
+                if (isScreenAwarenessEnabled) {
+                    screenContext
+                        .put("current_app", HavenAccessibilityService.currentScreenPackage)
+                        .put("screen_text", HavenAccessibilityService.currentScreenText)
+                }
 
                 val body = JSONObject()
                     .put("messages", JSONArray(conversationHistory.toString()))
@@ -877,12 +916,23 @@ class MainActivity : AppCompatActivity() {
                     .put("screen_context", screenContext)
                     .toString()
                 val request = Request.Builder()
-                    .url(RAILWAY_URL)
+                    .url(NetworkConfig.RAILWAY_URL)
                     .post(body.toRequestBody("application/json".toMediaType()))
                     .build()
                 CoroutineScope(Dispatchers.IO).launch {
                     try {
                         val response = client.newCall(request).execute()
+                        if (!response.isSuccessful) {
+                            withContext(Dispatchers.Main) {
+                                isWaitingForResponse = false
+                                statusText.text = "Connection error. Haven is offline."
+                                micButton.text = "Speak to Haven"
+                                micButton.isEnabled = true
+                                speakWithGTTS("I'm having trouble connecting to the network right now. Please check your connection and try again.")
+                            }
+                            return@launch
+                        }
+
                         val rawJson = JSONObject(response.body?.string() ?: "{}")
 
                         val responseText = when {
@@ -992,7 +1042,7 @@ class MainActivity : AppCompatActivity() {
         val chunk = speechQueue.removeAt(0)
         val body = JSONObject().put("text", chunk).toString()
         val request = Request.Builder()
-            .url(TTS_URL)
+            .url(NetworkConfig.TTS_URL)
             .post(body.toRequestBody("application/json".toMediaType()))
             .build()
         CoroutineScope(Dispatchers.IO).launch {
