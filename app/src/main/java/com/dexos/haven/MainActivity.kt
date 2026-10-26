@@ -38,6 +38,7 @@ import android.content.ContentValues
 import android.net.Uri
 import java.io.File
 import java.io.FileOutputStream
+import android.util.Log
 
 object NetworkConfig {
     const val RAILWAY_URL = "https://dex-backend-production-2bbe.up.railway.app/haven_api"
@@ -82,8 +83,17 @@ class MainActivity : AppCompatActivity() {
     private lateinit var audioCaptureManager: AudioCaptureManager
     private lateinit var speakerIdentifier: SpeakerIdentifier
     private var currentVoiceContext: VoiceContext? = null
+    private var localTts: android.speech.tts.TextToSpeech? = null
+    private var isTrustedContactEnabled = false
+    private var isDiagnosticsEnabled = false
+    private lateinit var relationshipManager: RelationshipManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        localTts = android.speech.tts.TextToSpeech(this) { status ->
+            if (status == android.speech.tts.TextToSpeech.SUCCESS) {
+                localTts?.language = java.util.Locale.US
+            }
+        }
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         statusText = findViewById(R.id.statusText)
@@ -95,6 +105,9 @@ class MainActivity : AppCompatActivity() {
         scrollView = findViewById(R.id.scrollView)
         prefs = getSharedPreferences("haven_prefs", MODE_PRIVATE)
         isScreenAwarenessEnabled = prefs.getBoolean("screen_awareness_enabled", false)
+        isTrustedContactEnabled = prefs.getBoolean("trusted_contact_enabled", false)
+        isDiagnosticsEnabled = prefs.getBoolean("diagnostics_enabled", false)
+        relationshipManager = RelationshipManager(this)
         audioCaptureManager = AudioCaptureManager(this)
         speakerIdentifier = SpeakerIdentifier(this)
         audioCaptureManager = AudioCaptureManager(this)
@@ -279,8 +292,27 @@ class MainActivity : AppCompatActivity() {
         clearHistoryButton.setOnClickListener {
             conversationHistory.clear()
             saveConversationHistory()
+            relationshipManager.clearModel()
             chatContainer.removeAllViews()
-            statusText.text = "Conversation history cleared."
+            statusText.text = "Local conversation history and relationship model cleared. (Backend copy not modified)"
+        }
+
+        val familyButton = findViewById<Button>(R.id.familyButton)
+        familyButton.text = if (isTrustedContactEnabled) "Family: ON" else "Family: OFF"
+        familyButton.setOnClickListener {
+            isTrustedContactEnabled = !isTrustedContactEnabled
+            prefs.edit().putBoolean("trusted_contact_enabled", isTrustedContactEnabled).apply()
+            familyButton.text = if (isTrustedContactEnabled) "Family: ON" else "Family: OFF"
+            statusText.text = if (isTrustedContactEnabled) "Trusted contacts enabled." else "Trusted contacts disabled."
+        }
+
+        val diagnosticsButton = findViewById<Button>(R.id.cameraButton)
+        diagnosticsButton.text = if (isDiagnosticsEnabled) "Diagnostics: ON" else "Diagnostics: OFF"
+        diagnosticsButton.setOnClickListener {
+            isDiagnosticsEnabled = !isDiagnosticsEnabled
+            prefs.edit().putBoolean("diagnostics_enabled", isDiagnosticsEnabled).apply()
+            diagnosticsButton.text = if (isDiagnosticsEnabled) "Diagnostics: ON" else "Diagnostics: OFF"
+            statusText.text = if (isDiagnosticsEnabled) "Diagnostics enabled." else "Diagnostics disabled."
         }
     }
 
@@ -577,6 +609,11 @@ class MainActivity : AppCompatActivity() {
     private fun continueWorkflow(text: String, lower: String): Boolean {
         when (pendingWorkflow) {
             "CALL_WHO" -> {
+                if (!isTrustedContactEnabled) {
+                    endWorkflow()
+                    say("Trusted contacts are disabled. You must tap the Family button to enable calling and messaging.")
+                    return true
+                }
                 var name = lower
                 for (filler in listOf("my ", "a ", "the ", "call ")) {
                     if (name.startsWith(filler)) name = name.removePrefix(filler).trim()
@@ -700,6 +737,11 @@ class MainActivity : AppCompatActivity() {
                 return true
             }
             "SMS_WHO" -> {
+                if (!isTrustedContactEnabled) {
+                    endWorkflow()
+                    say("Trusted contacts are disabled. You must tap the Family button to enable calling and messaging.")
+                    return true
+                }
                 var name = lower
                 for (filler in listOf("my ", "a ", "the ", "to ")) {
                     if (name.startsWith(filler)) name = name.removePrefix(filler).trim()
@@ -884,6 +926,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun sendToHaven(userMessage: String) {
+        if (isDiagnosticsEnabled) {
+            Log.d("HavenCore", "Raw: $userMessage")
+        } else {
+            Log.d("HavenCore", "Message received, length: ${userMessage.length}")
+        }
+
+        relationshipManager.extractFactsFromMessage(userMessage)
+
         havenCore.handle(
             input = userMessage,
             onLocalSuccess = { spokenResponse ->
@@ -909,11 +959,17 @@ class MainActivity : AppCompatActivity() {
                         .put("screen_text", HavenAccessibilityService.currentScreenText)
                 }
 
+                val maxHistorySize = 50
+                while (conversationHistory.size > maxHistorySize) {
+                    conversationHistory.removeAt(0)
+                }
+
                 val body = JSONObject()
                     .put("messages", JSONArray(conversationHistory.toString()))
                     .put("user_id", userId)
                     .put("voice_context", voiceContext)
                     .put("screen_context", screenContext)
+                    .put("relationship_context", relationshipManager.loadModel())
                     .toString()
                 val request = Request.Builder()
                     .url(NetworkConfig.RAILWAY_URL)
@@ -923,23 +979,30 @@ class MainActivity : AppCompatActivity() {
                     try {
                         val response = client.newCall(request).execute()
                         if (!response.isSuccessful) {
+                            response.close()
                             withContext(Dispatchers.Main) {
                                 isWaitingForResponse = false
                                 statusText.text = "Connection error. Haven is offline."
                                 micButton.text = "Speak to Haven"
                                 micButton.isEnabled = true
-                                speakWithGTTS("I'm having trouble connecting to the network right now. Please check your connection and try again.")
+                                localTts?.speak("I'm having trouble connecting to the network right now. Please check your connection and try again.", android.speech.tts.TextToSpeech.QUEUE_FLUSH, null, null)
                             }
                             return@launch
                         }
 
                         val rawJson = JSONObject(response.body?.string() ?: "{}")
 
+                        if (rawJson.has("relationship_update")) {
+                            relationshipManager.saveModel(rawJson.getJSONObject("relationship_update"))
+                        }
+
                         val responseText = when {
                             rawJson.has("voice_response") -> rawJson.optString("voice_response")
                             rawJson.has("response") -> rawJson.optString("response")
                             else -> "I am right here with you."
                         }
+
+                        response.close()
 
                         // Execute device action if backend returned one
                         if (rawJson.has("device_action") && !rawJson.isNull("device_action")) {
@@ -1016,6 +1079,7 @@ class MainActivity : AppCompatActivity() {
                             statusText.text = "Connection error."
                             micButton.text = "Speak to Haven"
                             micButton.isEnabled = true
+                            localTts?.speak("I'm having trouble connecting to the network right now. Please check your connection and try again.", android.speech.tts.TextToSpeech.QUEUE_FLUSH, null, null)
                         }
                     }
                 }
@@ -1048,7 +1112,15 @@ class MainActivity : AppCompatActivity() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val response = client.newCall(request).execute()
+                if (!response.isSuccessful) {
+                    response.close()
+                    localTts?.speak(chunk, android.speech.tts.TextToSpeech.QUEUE_ADD, null, null)
+                    withContext(Dispatchers.Main) { playNextChunk() }
+                    return@launch
+                }
+
                 val audioBytes = response.body?.bytes()
+                response.close()
                 if (audioBytes == null || audioBytes.size < 100) {
                     withContext(Dispatchers.Main) { playNextChunk() }
                     return@launch
@@ -1090,6 +1162,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             } catch (e: Exception) {
+                localTts?.speak(chunk, android.speech.tts.TextToSpeech.QUEUE_ADD, null, null)
                 withContext(Dispatchers.Main) { playNextChunk() }
             }
         }
@@ -1156,6 +1229,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        localTts?.shutdown()
         mediaPlayer?.release()
         speechRecognizer.destroy()
         super.onDestroy()

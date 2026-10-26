@@ -74,6 +74,15 @@ User voice → SpeechRecognizer → local command handler
 
 ---
 
+## Privacy & Data Retention
+
+Haven handles sensitive personal contexts.
+- **Screen Awareness** is strictly opt-in via a UI toggle.
+- **Backups**: Android Auto-Backups are explicitly disabled for `SharedPreferences`, which stores user IDs and local conversation context, ensuring it never leaks to Google Drive or across device transfers.
+- **Clearing History**: The "Clear" button instantly wipes local visible and persistent history state. (Note: Persistent remote memory clearing via API is planned but currently only applies to local cache).
+
+---
+
 ## Building from Source
 
 To compile Haven locally, ensure you have Android SDK and JDK installed, then run:

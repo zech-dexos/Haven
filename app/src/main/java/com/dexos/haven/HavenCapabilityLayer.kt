@@ -107,7 +107,15 @@ class HavenCapabilityLayer(private val context: Context) {
         val packageName = "com.microsoft.solitairecollection"
         val launched = launchPackage(packageName)
         if (!launched) {
-            launchPlayStorePage(packageName)
+            try {
+                val intent = Intent(Intent.ACTION_VIEW).apply {
+                    data = Uri.parse("market://details?id=$packageName")
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                context.startActivity(intent)
+            } catch (e: Exception) {
+                Log.e(TAG, "Play Store launch failed for Solitaire", e)
+            }
             return HavenAction(
                 type = "OPEN_APP", handled = true,
                 spokenResponse = "Opening the Play Store so you can download Solitaire.",
@@ -163,7 +171,10 @@ class HavenCapabilityLayer(private val context: Context) {
     }
 
     private fun isEmergency(t: String) =
-        t.contains("call 911") || t.contains("call for help") || t.contains("dial 911")
+        t.contains("call 911") || t.contains("call for help") || t.contains("dial 911") ||
+        t.contains("i fell") || t.contains("help me") || t.contains("i need help") ||
+        t.contains("chest pain") || t.contains("can't breathe") || t.contains("cant breathe") ||
+        t.contains("i'm hurt") || t.contains("i am hurt")
 
     private fun isCall(t: String) =
         (t.contains("call") || t.contains("dial") || t.contains("ring")) &&
@@ -227,45 +238,25 @@ class HavenCapabilityLayer(private val context: Context) {
     // ---------------------------------------------------------------------------
 
     private fun handleEmergency(t: String): HavenAction {
-        var callInitiated = false
-        if (androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.CALL_PHONE) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
-            try {
-                val intent = Intent(Intent.ACTION_CALL).apply {
-                    data = Uri.parse("tel:911")
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                }
-                context.startActivity(intent)
-                callInitiated = true
-            } catch (e: Exception) {
-                Log.e(TAG, "Emergency call failed", e)
+        try {
+            val intent = Intent(Intent.ACTION_DIAL).apply {
+                data = Uri.parse("tel:911")
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
             }
-        }
-
-        if (!callInitiated) {
-            try {
-                val intent = Intent(Intent.ACTION_DIAL).apply {
-                    data = Uri.parse("tel:911")
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                }
-                context.startActivity(intent)
-            } catch (e2: Exception) {
-                Log.e(TAG, "Emergency dial failed", e2)
-                return HavenAction(
-                    type = "EMERGENCY",
-                    handled = true,
-                    spokenResponse = "I tried to open the dialer for 911 but an error occurred. Please dial 911 manually."
-                )
-            }
+            context.startActivity(intent)
+        } catch (e2: Exception) {
+            Log.e(TAG, "Emergency dial failed", e2)
+            return HavenAction(
+                type = "EMERGENCY",
+                handled = true,
+                spokenResponse = "I tried to open the dialer for 911 but an error occurred. Please dial 911 manually."
+            )
         }
 
         return HavenAction(
             type = "EMERGENCY",
             handled = true,
-            spokenResponse = if (callInitiated) {
-                "I'm calling 911 right now. Help is on the way. Stay calm, I'm right here with you."
-            } else {
-                "I've opened the dialer for 911. Please tap the call button."
-            }
+            spokenResponse = "I've opened the dialer for 911. You must tap the call button to place the call."
         )
     }
 
