@@ -32,6 +32,34 @@
             android:layout_weight="1"/>
 
         <Button
+            android:id="@+id/screenAwarenessButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="👁 Screen: OFF"
+            android:textSize="13sp"
+            android:textColor="#9FE1CB"
+            android:background="#0f1020"
+            android:paddingLeft="12dp"
+            android:paddingRight="12dp"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+            android:layout_marginRight="12dp"/>
+
+        <Button
+            android:id="@+id/clearHistoryButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🗑 Clear"
+            android:textSize="13sp"
+            android:textColor="#9FE1CB"
+            android:background="#0f1020"
+            android:paddingLeft="12dp"
+            android:paddingRight="12dp"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+            android:layout_marginRight="12dp"/>
+
+        <Button
             android:id="@+id/displayModeButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
