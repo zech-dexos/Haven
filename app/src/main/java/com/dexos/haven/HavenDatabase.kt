@@ -18,10 +18,11 @@ class FloatArrayConverter {
         else value.split(",").map { it.toFloat() }.toFloatArray()
 }
 
-@Database(entities = [VoiceProfile::class], version = 1, exportSchema = false)
+@Database(entities = [VoiceProfile::class, com.dexos.haven.memory.RelationshipMemory::class], version = 1, exportSchema = false)
 @TypeConverters(FloatArrayConverter::class)
 abstract class HavenDatabase : RoomDatabase() {
     abstract fun voiceProfileDao(): VoiceProfileDao
+    abstract fun relationshipMemoryDao(): com.dexos.haven.memory.RelationshipMemoryDao
 
     companion object {
         @Volatile private var INSTANCE: HavenDatabase? = null

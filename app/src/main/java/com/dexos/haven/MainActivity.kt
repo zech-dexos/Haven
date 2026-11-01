@@ -82,6 +82,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var audioCaptureManager: AudioCaptureManager
     private lateinit var speakerIdentifier: SpeakerIdentifier
     private var currentVoiceContext: VoiceContext? = null
+    private val relationshipManager by lazy { com.dexos.haven.memory.RelationshipManager(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -895,33 +896,42 @@ class MainActivity : AppCompatActivity() {
             sendToBackend = { fallback ->
                 isWaitingForResponse = true
                 statusText.text = "Haven is thinking..."
-                conversationHistory.add(JSONObject().put("role", "user").put("content", fallback))
-                val voiceContext = JSONObject()
-                    .put("message_length", fallback.length)
-                    .put("word_count", fallback.trim().split("\\s+".toRegex()).size)
-                    .put("is_short", fallback.length < 20)
-                    .put("is_question", fallback.trimEnd().endsWith("?"))
 
-                val screenContext = JSONObject()
-                if (isScreenAwarenessEnabled) {
-                    screenContext
-                        .put("current_app", HavenAccessibilityService.currentScreenPackage)
-                        .put("screen_text", HavenAccessibilityService.currentScreenText)
-                }
-
-                val body = JSONObject()
-                    .put("messages", JSONArray(conversationHistory.toString()))
-                    .put("user_id", userId)
-                    .put("voice_context", voiceContext)
-                    .put("screen_context", screenContext)
-                    .toString()
-                val request = Request.Builder()
-                    .url(NetworkConfig.RAILWAY_URL)
-                    .post(body.toRequestBody("application/json".toMediaType()))
-                    .build()
                 CoroutineScope(Dispatchers.IO).launch {
-                    try {
-                        val response = client.newCall(request).execute()
+                    relationshipManager.extractAndSaveMemories(userId, fallback)
+                    val relationshipContext = relationshipManager.getContextString(userId)
+
+                    withContext(Dispatchers.Main) {
+                        conversationHistory.add(JSONObject().put("role", "user").put("content", fallback))
+                        val voiceContext = JSONObject()
+                            .put("message_length", fallback.length)
+                            .put("word_count", fallback.trim().split("\\s+".toRegex()).size)
+                            .put("is_short", fallback.length < 20)
+                            .put("is_question", fallback.trimEnd().endsWith("?"))
+
+                        val screenContext = JSONObject()
+                        if (isScreenAwarenessEnabled) {
+                            screenContext
+                                .put("current_app", HavenAccessibilityService.currentScreenPackage)
+                                .put("screen_text", HavenAccessibilityService.currentScreenText)
+                        }
+
+                        val body = JSONObject()
+                            .put("messages", JSONArray(conversationHistory.toString()))
+                            .put("user_id", userId)
+                            .put("voice_context", voiceContext)
+                            .put("screen_context", screenContext)
+                            .put("relationship_context", relationshipContext)
+                            .toString()
+
+                        val request = Request.Builder()
+                            .url(NetworkConfig.RAILWAY_URL)
+                            .post(body.toRequestBody("application/json".toMediaType()))
+                            .build()
+
+                        CoroutineScope(Dispatchers.IO).launch {
+                            try {
+                                val response = client.newCall(request).execute()
                         if (!response.isSuccessful) {
                             withContext(Dispatchers.Main) {
                                 isWaitingForResponse = false
@@ -1010,12 +1020,14 @@ class MainActivity : AppCompatActivity() {
                             statusText.text = "Haven is speaking..."
                             speakWithGTTS(responseText)
                         }
-                    } catch (e: Exception) {
-                        withContext(Dispatchers.Main) {
-                            isWaitingForResponse = false
-                            statusText.text = "Connection error."
-                            micButton.text = "Speak to Haven"
-                            micButton.isEnabled = true
+                            } catch (e: Exception) {
+                                withContext(Dispatchers.Main) {
+                                    isWaitingForResponse = false
+                                    statusText.text = "Connection error."
+                                    micButton.text = "Speak to Haven"
+                                    micButton.isEnabled = true
+                                }
+                            }
                         }
                     }
                 }

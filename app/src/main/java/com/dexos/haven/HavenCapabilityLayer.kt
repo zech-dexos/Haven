@@ -162,8 +162,17 @@ class HavenCapabilityLayer(private val context: Context) {
         )
     }
 
-    private fun isEmergency(t: String) =
-        t.contains("call 911") || t.contains("call for help") || t.contains("dial 911")
+    private fun isEmergency(t: String): Boolean {
+        val lower = t.lowercase()
+        return lower.contains("call 911") || lower.contains("dial 911") ||
+               lower.contains("call for help") || lower.contains("help me") ||
+               lower.contains("i fell") || lower.contains("i can't get up") ||
+               lower.contains("i cant get up") || lower.contains("i can't breathe") ||
+               lower.contains("i cant breathe") || lower.contains("chest pain") ||
+               lower.contains("need an ambulance") || lower.contains("call emergency services") ||
+               lower.contains("call an ambulance") || lower.contains("heart attack") ||
+               lower.contains("having a stroke")
+    }
 
     private fun isCall(t: String) =
         (t.contains("call") || t.contains("dial") || t.contains("ring")) &&
@@ -229,7 +238,7 @@ class HavenCapabilityLayer(private val context: Context) {
     private fun handleEmergency(t: String): HavenAction {
         var callInitiated = false
         if (androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.CALL_PHONE) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
-            try {
+            /*try {
                 val intent = Intent(Intent.ACTION_CALL).apply {
                     data = Uri.parse("tel:911")
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK
@@ -238,7 +247,8 @@ class HavenCapabilityLayer(private val context: Context) {
                 callInitiated = true
             } catch (e: Exception) {
                 Log.e(TAG, "Emergency call failed", e)
-            }
+            }*/
+            // DELIBERATELY DISABLED direct call for safety. We only dial.
         }
 
         if (!callInitiated) {
